@@ -370,3 +370,166 @@ ALTER TABLE Payments
 ADD COLUMN payment_reason VARCHAR(30);
 
 
+
+-- JOIN QUERIES
+
+-- Users and Users-phone Records
+
+SELECT *
+FROM Users u
+JOIN Users_phone phone
+ON u.user_ID = phone.user_ID;
+
+
+
+-- Users and Donors Records
+
+SELECT *
+FROM Users u
+JOIN Donors donor
+ON u.user_ID = donor.user_ID;
+
+
+
+-- Donors and Donors_phone Records
+
+SELECT *
+FROM Donors donor
+JOIN Donors_phone phone
+ON donor.national_ID = phone.national_ID;
+
+
+
+-- Donors and Donations Records
+
+SELECT *
+FROM Donors donor
+JOIN Donations donation
+ON donor.national_ID = donation.national_ID;
+
+
+
+-- Donations and Screenings Records
+
+SELECT *
+FROM Donations donation
+JOIN Screenings screening
+ON donation.donation_ID = screening.donation_ID;
+
+
+
+-- Users and Branches Records
+
+SELECT *
+FROM Users u
+JOIN Branches branch
+ON u.user_ID = branch.user_ID;
+
+
+
+-- Branches and Branches_phone Records
+
+SELECT *
+FROM Branches branch
+JOIN Branches_phone phone
+ON branch.branch_ID = phone.branch_ID;
+
+
+
+-- Branches and Blood_Inventory Records
+
+SELECT *
+FROM Branches branch
+JOIN Blood_Inventory inventory
+ON branch.branch_ID = inventory.branch_ID;
+
+
+
+-- Requesters and Requests Records
+
+SELECT *
+FROM Requesters requester
+JOIN Requests request
+ON requester.requester_ID = request.requester_ID;
+
+
+
+-- Requesters and Requesters_phone Records
+
+SELECT *
+FROM Requesters requester
+JOIN Requesters_phone phone
+ON requester.requester_ID = phone.requester_ID;
+
+
+
+-- Users and Reports Records
+
+SELECT *
+FROM Users u
+JOIN Reports report
+ON u.user_ID = report.user_ID;
+
+
+
+-- Branches and Transports Records
+
+SELECT *
+FROM Branches branch
+JOIN Transports transport
+ON branch.branch_ID = transport.branch_ID;
+
+
+
+-- Transports and Allocations Records
+
+SELECT *
+FROM Transports transport
+JOIN Allocations allocation
+ON transport.transport_ID = allocation.transport_ID;
+
+
+
+-- Allocations and Payments Records
+
+SELECT *
+FROM Allocations allocation
+JOIN Payments payment
+ON allocation.allocation_ID = payment.allocation_ID;
+
+
+
+
+-- Blood_Inventory and Inventory_Allocations Records
+
+SELECT *
+FROM Blood_Inventory inventory
+JOIN Inventory_Allocations inventory_allocation
+ON inventory.inventory_ID = inventory_allocation.inventory_ID;
+
+
+
+-- Allocations and Inventory_Allocations Records
+
+SELECT *
+FROM Allocations allocation
+JOIN Inventory_Allocations inventory_allocation
+ON allocation.allocation_ID = inventory_allocation.allocation_ID;
+
+
+
+-- Blood_Inventory and Inventory_Requests Records
+
+SELECT *
+FROM Blood_Inventory inventory
+JOIN Inventory_Requests inventory_request
+ON inventory.inventory_ID = inventory_request.inventory_ID;
+
+
+
+-- Requests and Inventory_Requests Records
+
+SELECT *
+FROM Requests request
+JOIN Inventory_Requests inventory_request
+ON request.request_ID = inventory_request.request_ID;
