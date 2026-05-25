@@ -255,6 +255,59 @@ REFERENCES Requests(request_ID)
 -- ALTERATIONS
 
 
+-- ALTERATIONS: Enums
+
+
+CREATE TYPE gender_enum AS ENUM (
+'Male', 'Female'
+);
+
+CREATE TYPE blood_group_enum AS ENUM (
+'A+', 'A-',
+'B+', 'B-',
+'AB+', 'AB-',
+'O+', 'O-'
+);
+
+CREATE TYPE role_enum AS ENUM (
+'Superadmin', 'Admin', 'Staff'
+);
+
+CREATE TYPE requester_type_enum AS ENUM (
+'Hospital', 'Individual', 'Blood Bank'
+);
+
+CREATE TYPE urgency_enum AS ENUM (
+'Normal', 'Urgent', 'Critical'
+);
+
+CREATE TYPE destination_type_enum AS ENUM (
+'Hospital', 'Branch'
+);
+
+
+
+-- ALTERATIONS: TABLES
+
+-- ALTERATIONS: Users
+
+ALTER TABLE Users
+ALTER COLUMN role TYPE role_enum
+USING role::role_enum;
+
+
+
+-- ALTERATIONS: Donors
+
+ALTER TABLE Donors
+ALTER COLUMN gender TYPE gender_enum
+USING gender::gender_enum;
+
+ALTER TABLE Donors
+ALTER COLUMN blood_group TYPE blood_group_enum
+USING blood_group::blood_group_enum;
+
+
 
 -- ALTERATIONS: Screenings
 
@@ -269,6 +322,34 @@ ADD COLUMN result VARCHAR(20);
 
 
 
+-- ALTERATIONS: Blood_Inventory
+
+ALTER TABLE Blood_Inventory
+ALTER COLUMN blood_group TYPE blood_group_enum
+USING blood_group::blood_group_enum;
+
+
+
+-- ALTERATIONS: Requesters
+
+ALTER TABLE Requesters
+ALTER COLUMN requester_type TYPE requester_type_enum
+USING requester_type::requester_type_enum;
+
+
+
+-- ALTERATIONS: Requests
+
+ALTER TABLE Requests
+ALTER COLUMN blood_group TYPE blood_group_enum
+USING blood_group::blood_group_enum;
+
+ALTER TABLE Requests
+ALTER COLUMN urgency TYPE urgency_enum
+USING urgency::urgency_enum;
+
+
+
 -- ALTERATIONS: Transports
 
 ALTER TABLE Transports
@@ -276,6 +357,10 @@ ADD COLUMN dispatched_time TIMESTAMP;
 
 ALTER TABLE Transports
 ADD COLUMN received_time TIMESTAMP;
+
+ALTER TABLE Transports
+ALTER COLUMN destination_type TYPE destination_type_enum
+USING destination_type::destination_type_enum;
 
 
 
