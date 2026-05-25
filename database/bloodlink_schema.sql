@@ -247,3 +247,34 @@ REFERENCES Blood_Inventory(inventory_ID),
 FOREIGN KEY (request_ID)
 REFERENCES Requests(request_ID)
 );
+
+
+
+-- ALTERATIONS
+
+
+
+ALTER TABLE Screenings
+ADD COLUMN tested_on TIMESTAMP;
+
+ALTER TABLE Screenings
+ADD COLUMN tested_by VARCHAR(100);
+
+ALTER TABLE Screenings
+ADD COLUMN result VARCHAR(20);
+
+
+
+ALTER TABLE Transports
+ADD COLUMN dispatched_time TIMESTAMP;
+
+
+ALTER TABLE Transports
+ADD COLUMN received_time TIMESTAMP;
+
+
+
+ALTER TABLE Payments
+ADD COLUMN payment_reason VARCHAR(30);
+
+
