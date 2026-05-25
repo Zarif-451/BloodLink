@@ -1,3 +1,5 @@
+-- CREATE TABLE Statements
+
 CREATE TABLE Users (
 user_ID SERIAL PRIMARY KEY,
 full_name VARCHAR(100),
@@ -254,6 +256,8 @@ REFERENCES Requests(request_ID)
 
 
 
+-- ALTERATIONS: Screenings
+
 ALTER TABLE Screenings
 ADD COLUMN tested_on TIMESTAMP;
 
@@ -265,14 +269,17 @@ ADD COLUMN result VARCHAR(20);
 
 
 
+-- ALTERATIONS: Transports
+
 ALTER TABLE Transports
 ADD COLUMN dispatched_time TIMESTAMP;
-
 
 ALTER TABLE Transports
 ADD COLUMN received_time TIMESTAMP;
 
 
+
+-- ALTERATIONS: Payments
 
 ALTER TABLE Payments
 ADD COLUMN payment_reason VARCHAR(30);
