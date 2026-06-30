@@ -430,3 +430,28 @@ CREATE TABLE Fulfill (
         ON DELETE RESTRICT
 
 );
+
+
+
+
+DROP TABLE IF EXISTS Fulfill;
+
+ALTER TABLE Blood_Inventory
+ADD COLUMN request_ID VARCHAR(20);
+
+ALTER TABLE Blood_Inventory
+ADD CONSTRAINT fk_inventory_request
+FOREIGN KEY (request_ID)
+REFERENCES Requests(request_ID);
+
+
+
+DROP TABLE IF EXISTS Allocate;
+
+ALTER TABLE Blood_Inventory
+ADD COLUMN allocation_ID VARCHAR(20);
+
+ALTER TABLE Blood_Inventory
+ADD CONSTRAINT fk_inventory_allocation
+FOREIGN KEY (allocation_ID)
+REFERENCES Allocations(allocation_ID);
