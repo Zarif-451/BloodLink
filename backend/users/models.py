@@ -67,3 +67,25 @@ class UserPhone(models.Model):
 
     class Meta:
         db_table = "User_phone"
+
+
+class Report(models.Model):
+
+    report_ID = models.CharField(
+        max_length=20,
+        primary_key=True
+    )
+
+    generated_on = models.DateField()
+
+    report_data = models.TextField()
+
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.RESTRICT,
+        db_column="user_ID",
+        related_name="reports"
+    )
+
+    class Meta:
+        db_table = "Reports"
