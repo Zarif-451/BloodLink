@@ -1,46 +1,50 @@
 # 🩸 BloodLink
 
-BloodLink is a Blood Bank Management System being developed as a university DBMS project. The project aims to streamline blood donation, inventory management, request handling, and transportation through a secure and scalable system.
+BloodLink is a Blood Bank Management System developed as a university DBMS project. It aims to streamline blood donation, donor management, blood inventory, request handling, transportation, and payment management through a secure and scalable system.
 
-This project follows a **Database-First** development approach, where the database schema is designed and implemented before backend development.
+The project follows a **Database-First Development Approach**, where the database schema is fully designed and implemented before backend development.
 
 ---
 
-## 📌 Features (Planned)
+# 📌 Features
 
 - 👤 User Management (SuperAdmin, Admin, Staff)
 - 🩸 Donor Management
 - 💉 Blood Donation Tracking
 - 🧪 Screening & Test Records
-- 🏥 Hospital Request Management
+- 🏥 Blood Request Management
 - 📦 Blood Inventory Management
 - 🚚 Transportation Tracking
 - 💰 Payment Management
-- 📊 Reports & Analytics
+- 📊 Report Generation
 - 🔒 Role-Based Access Control (RBAC)
 
 ---
 
-## 🛠 Tech Stack
+# 🛠 Tech Stack
 
-### Backend
+## Backend
+
 - Python
 - Django
 - Django REST Framework
 
-### Database
+## Database
+
 - PostgreSQL
 
-### Frontend
-- Flutter (In Development)
+## Frontend
 
-### Version Control
+- Flutter *(In Development)*
+
+## Version Control
+
 - Git
 - GitHub
 
 ---
 
-## 📂 Project Structure
+# 📂 Project Structure
 
 ```text
 BloodLink/
@@ -48,6 +52,13 @@ BloodLink/
 ├── backend/
 │   ├── bloodlink/
 │   ├── users/
+│   ├── donors/
+│   ├── requests/
+│   ├── donations/
+│   ├── inventory/
+│   ├── branches/
+│   ├── transport/
+│   ├── payments/
 │   └── manage.py
 │
 ├── database/
@@ -62,62 +73,88 @@ BloodLink/
 
 ---
 
-## 🚀 Development Status
+# 🗄 Database Modules
 
-### ✅ Completed
+The system currently consists of the following database modules:
+
+- Users
+- User Phone
+- Donors
+- Donor Phone
+- Requesters
+- Requester Phone
+- Requests
+- Donations
+- Screenings
+- Blood Inventory
+- Allocations
+- Branches
+- Branch Phone
+- Transports
+- Payments
+- Reports
+
+---
+
+# 🚀 Development Status
+
+## ✅ Completed
 
 - Database Design (ERD)
 - Relational Mapping
-- PostgreSQL Database
+- PostgreSQL Database Design
 - SQL Schema
+- Database Constraints
 - Django Project Setup
-- Users App Initialization
 - Django ↔ PostgreSQL Connection
 - Environment Variable Configuration (.env)
-
-### 🚧 In Progress
-
-- User Module
+- Django App Structure
 - Django Models
-- REST APIs
 
-### 📅 Planned
+---
 
+## 🚧 In Progress
+
+- Django Admin Configuration
+- REST API Development
 - Authentication & Authorization
-- Donor Module
-- Donation Module
-- Inventory Module
-- Request Management
-- Transport Module
-- Payment Module
-- Flutter Integration
+- CRUD Operations
+
+---
+
+## 📅 Planned
+
+- Role-Based Access Control (RBAC)
+- Business Logic Implementation
+- Flutter Backend Integration
+- Testing & Validation
 - Deployment
 
 ---
 
-## ⚙️ Setup
+# ⚙️ Setup
 
-### Clone Repository
+## Clone Repository
 
 ```bash
 git clone https://github.com/Zarif-451/BloodLink.git
 cd BloodLink
 ```
 
-### Create Environment
+## Create Environment
 
 ```bash
 conda create -n bloodlink python=3.13
 conda activate bloodlink
 ```
 
-### Install Dependencies
+## Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Create Environment Variables
+## Create Environment Variables
 
 Create a `.env` file inside the `backend` directory.
 
@@ -129,7 +166,7 @@ DB_HOST=localhost
 DB_PORT=5432
 ```
 
-### Run Server
+## Run Development Server
 
 ```bash
 cd backend
@@ -138,9 +175,9 @@ python manage.py runserver
 
 ---
 
-## 📖 Development Approach
+# 📖 Development Workflow
 
-This project follows a **Database-First Architecture**.
+This project follows a **Database-First Development Workflow**.
 
 ```text
 ERD
@@ -158,15 +195,32 @@ Flutter Frontend
 
 ---
 
-## 👨‍💻 Author
+# 🎯 Current Progress
 
-**Muhammad Zarif Rahman**
+### Database Layer
+- ✅ Completed
 
-- CSE Undergraduate, CUET
-- Python • Django • Machine Learning • Cybersecurity
+### Django Models
+- ✅ Completed
+
+### Backend Development
+- 🚧 In Progress
+
+### Frontend Integration
+- ⏳ Pending
 
 ---
 
-## 📄 License
+# 👨‍💻 Author
+
+**Muhammad Zarif Rahman**
+
+CSE Undergraduate, CUET
+
+Python • Django • Machine Learning • Cybersecurity
+
+---
+
+# 📄 License
 
 This project is developed for educational purposes.
