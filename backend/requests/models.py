@@ -98,3 +98,25 @@ class Request(models.Model):
 
     class Meta:
         db_table = "Requests"
+
+
+class RequesterPhone(models.Model):
+
+    pk = models.CompositePrimaryKey(
+        "requester",
+        "phone"
+    )
+
+    requester = models.ForeignKey(
+        "requests.Requester",
+        on_delete=models.CASCADE,
+        db_column="requester_ID",
+        related_name="phone_numbers"
+    )
+
+    phone = models.CharField(
+        max_length=15
+    )
+
+    class Meta:
+        db_table = "Requester_phone"

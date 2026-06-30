@@ -45,3 +45,25 @@ class User(models.Model):
     
     class Meta:
         db_table = "Users"
+
+
+class UserPhone(models.Model):
+
+    pk = models.CompositePrimaryKey(
+        "user",
+        "phone"
+    )
+
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        db_column="user_ID",
+        related_name="phone_numbers"
+    )
+
+    phone = models.CharField(
+        max_length=15
+    )
+
+    class Meta:
+        db_table = "User_phone"
