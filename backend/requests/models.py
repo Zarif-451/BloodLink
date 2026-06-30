@@ -92,7 +92,8 @@ class Request(models.Model):
     requester = models.ForeignKey(
         "requests.Requester",
         on_delete=models.RESTRICT,
-        db_column="requester_ID"
+        db_column="requester_ID",
+        related_name="requests"
     )
 
     class Meta:
