@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import BloodInventory, Allocation
 
-# Register your models here.
+admin.site.register(BloodInventory)
+admin.site.register(Allocation)
