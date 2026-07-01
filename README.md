@@ -1,8 +1,8 @@
 # 🩸 BloodLink
 
-BloodLink is a Blood Bank Management System developed as a university DBMS project. It aims to streamline blood donation, donor management, blood inventory, request handling, transportation, and payment management through a secure and scalable system.
+BloodLink is a Blood Bank Management System developed as a university DBMS project. It aims to streamline blood donation, donor management, blood inventory, request handling, transportation, payment management, and reporting through a secure and scalable system.
 
-The project follows a **Database-First Development Approach**, where the database schema is fully designed and implemented before backend development.
+The project follows a **Database-First Development Approach**, where the database schema is designed and implemented before backend development begins.
 
 ---
 
@@ -27,7 +27,7 @@ The project follows a **Database-First Development Approach**, where the databas
 
 - Python
 - Django
-- Django REST Framework
+- Django REST Framework (In Progress)
 
 ## Database
 
@@ -35,7 +35,7 @@ The project follows a **Database-First Development Approach**, where the databas
 
 ## Frontend
 
-- Flutter *(In Development)*
+- Flutter (In Development)
 
 ## Version Control
 
@@ -58,7 +58,7 @@ BloodLink/
 │   ├── inventory/
 │   ├── branches/
 │   ├── transport/
-│   ├── payments/
+│   ├── payment/
 │   └── manage.py
 │
 ├── database/
@@ -74,8 +74,6 @@ BloodLink/
 ---
 
 # 🗄 Database Modules
-
-The system currently consists of the following database modules:
 
 - Users
 - User Phone
@@ -110,20 +108,24 @@ The system currently consists of the following database modules:
 - Environment Variable Configuration (.env)
 - Django App Structure
 - Django Models
+- Initial Database Migrations
+- Database-First Integration (`migrate --fake-initial`)
+- Django Admin Configuration
 
 ---
 
 ## 🚧 In Progress
 
-- Django Admin Configuration
+- Django REST Framework (DRF)
 - REST API Development
-- Authentication & Authorization
+- Serializers
 - CRUD Operations
 
 ---
 
 ## 📅 Planned
 
+- Authentication & Authorization
 - Role-Based Access Control (RBAC)
 - Business Logic Implementation
 - Flutter Backend Integration
@@ -166,6 +168,18 @@ DB_HOST=localhost
 DB_PORT=5432
 ```
 
+## Apply Migrations
+
+```bash
+python manage.py migrate
+```
+
+> **Note:** Since this project follows a Database-First approach, the initial migration was applied using:
+
+```bash
+python manage.py migrate --fake-initial
+```
+
 ## Run Development Server
 
 ```bash
@@ -177,8 +191,6 @@ python manage.py runserver
 
 # 📖 Development Workflow
 
-This project follows a **Database-First Development Workflow**.
-
 ```text
 ERD
     ↓
@@ -188,6 +200,8 @@ PostgreSQL Database
     ↓
 Django Models
     ↓
+Django Admin
+    ↓
 REST API
     ↓
 Flutter Frontend
@@ -195,19 +209,20 @@ Flutter Frontend
 
 ---
 
-# 🎯 Current Progress
+# 📊 Current Progress
 
-### Database Layer
-- ✅ Completed
+| Component | Status |
+|-----------|--------|
+| Database Design | ✅ Completed |
+| PostgreSQL Database | ✅ Completed |
+| Django Models | ✅ Completed |
+| Django Admin | ✅ Completed |
+| REST API | 🚧 In Progress |
+| Authentication | ⏳ Planned |
+| Business Logic | ⏳ Planned |
+| Flutter Integration | ⏳ Planned |
+| Testing | ⏳ Planned |
 
-### Django Models
-- ✅ Completed
-
-### Backend Development
-- 🚧 In Progress
-
-### Frontend Integration
-- ⏳ Pending
 
 ---
 
