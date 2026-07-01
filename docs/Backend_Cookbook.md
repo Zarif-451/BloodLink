@@ -1,241 +1,654 @@
-# 🩸 BloodLink
+# 📘 BloodLink Backend Cookbook
 
-BloodLink is a Blood Bank Management System developed as a university DBMS project. It aims to streamline blood donation, donor management, blood inventory, request handling, transportation, payment management, and reporting through a secure and scalable system.
-
-The project follows a **Database-First Development Approach**, where the database schema is designed and implemented before backend development begins.
-
----
-
-# 📌 Features
-
-- 👤 User Management (SuperAdmin, Admin, Staff)
-- 🩸 Donor Management
-- 💉 Blood Donation Tracking
-- 🧪 Screening & Test Records
-- 🏥 Blood Request Management
-- 📦 Blood Inventory Management
-- 🚚 Transportation Tracking
-- 💰 Payment Management
-- 📊 Report Generation
-- 🔒 Role-Based Access Control (RBAC)
+> A personal backend handbook created while building **BloodLink**.
+>
+> Development Approach:
+>
+> **Learn → Build → Document → Repeat**
 
 ---
 
-# 🛠 Tech Stack
+# 🏗️ Backend Architecture
 
-## Backend
-
-- Python
-- Django
-- Django REST Framework (In Progress)
-
-## Database
-
-- PostgreSQL
-
-## Frontend
-
-- Flutter (In Development)
-
-## Version Control
-
-- Git
-- GitHub
-
----
-
-# 📂 Project Structure
-
-```text
-BloodLink/
-│
-├── backend/
-│   ├── bloodlink/
-│   ├── users/
-│   ├── donors/
-│   ├── requests/
-│   ├── donations/
-│   ├── inventory/
-│   ├── branches/
-│   ├── transport/
-│   ├── payment/
-│   └── manage.py
-│
-├── database/
-│   ├── bloodlink_schema.sql
-│   ├── BloodLink_ERD.png
-│   └── BloodLink_Relational_Mapping.pdf
-│
-├── frontend/
-│
-└── README.md
+```
+                 Browser / Flutter
+                        │
+                  HTTP Request
+                        │
+                        ▼
+             Project URL (bloodlink/urls.py)
+                        │
+                        ▼
+               App URL (donors/urls.py)
+                        │
+                        ▼
+                 APIView (views.py)
+                        │
+                        ▼
+              Donor.objects.all()
+                        │
+                        ▼
+                 Django ORM
+                        │
+                        ▼
+                  PostgreSQL
+                        │
+                        ▼
+                 Django ORM
+                        │
+                        ▼
+                 Python Objects
+                        │
+                        ▼
+                 DonorSerializer
+                        │
+                        ▼
+                      JSON
+                        │
+                        ▼
+               HTTP Response (200 OK)
+                        │
+                        ▼
+                 Browser / Flutter
 ```
 
 ---
 
-# 🗄 Database Modules
+# Chapter 1 — Database
+
+## 🎯 Purpose
+
+The database permanently stores all application data.
+
+BloodLink stores:
 
 - Users
-- User Phone
 - Donors
-- Donor Phone
-- Requesters
-- Requester Phone
-- Requests
 - Donations
-- Screenings
 - Blood Inventory
-- Allocations
+- Requests
 - Branches
-- Branch Phone
-- Transports
+- Transport
 - Payments
 - Reports
 
 ---
 
-# 🚀 Development Status
+## Technologies
 
-## ✅ Completed
-
-- Database Design (ERD)
-- Relational Mapping
-- PostgreSQL Database Design
-- SQL Schema
-- Database Constraints
-- Django Project Setup
-- Django ↔ PostgreSQL Connection
-- Environment Variable Configuration (.env)
-- Django App Structure
-- Django Models
-- Initial Database Migrations
-- Database-First Integration (`migrate --fake-initial`)
-- Django Admin Configuration
+- PostgreSQL
+- pgAdmin
 
 ---
 
-## 🚧 In Progress
+## Development Workflow
 
-- Django REST Framework (DRF)
-- REST API Development
-- Serializers
-- CRUD Operations
-
----
-
-## 📅 Planned
-
-- Authentication & Authorization
-- Role-Based Access Control (RBAC)
-- Business Logic Implementation
-- Flutter Backend Integration
-- Testing & Validation
-- Deployment
-
----
-
-# ⚙️ Setup
-
-## Clone Repository
-
-```bash
-git clone https://github.com/Zarif-451/BloodLink.git
-cd BloodLink
 ```
-
-## Create Environment
-
-```bash
-conda create -n bloodlink python=3.13
-conda activate bloodlink
-```
-
-## Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-## Create Environment Variables
-
-Create a `.env` file inside the `backend` directory.
-
-```env
-DB_NAME=your_database_name
-DB_USER=your_username
-DB_PASSWORD=your_password
-DB_HOST=localhost
-DB_PORT=5432
-```
-
-## Apply Migrations
-
-```bash
-python manage.py migrate
-```
-
-> **Note:** Since this project follows a Database-First approach, the initial migration was applied using:
-
-```bash
-python manage.py migrate --fake-initial
-```
-
-## Run Development Server
-
-```bash
-cd backend
-python manage.py runserver
-```
-
----
-
-# 📖 Development Workflow
-
-```text
 ERD
     ↓
 Relational Mapping
     ↓
 PostgreSQL Database
-    ↓
-Django Models
-    ↓
-Django Admin
-    ↓
-REST API
-    ↓
-Flutter Frontend
 ```
 
 ---
 
-# 📊 Current Progress
+## Project Files
 
-| Component | Status |
-|-----------|--------|
-| Database Design | ✅ Completed |
-| PostgreSQL Database | ✅ Completed |
-| Django Models | ✅ Completed |
-| Django Admin | ✅ Completed |
-| REST API | 🚧 In Progress |
-| Authentication | ⏳ Planned |
-| Business Logic | ⏳ Planned |
-| Flutter Integration | ⏳ Planned |
-| Testing | ⏳ Planned |
-
+```
+database/
+│
+├── bloodlink_schema.sql
+├── BloodLink_ERD.png
+└── BloodLink_Relational_Mapping.pdf
+```
 
 ---
 
-# 👨‍💻 Author
+## Common Mistakes
 
-**Muhammad Zarif Rahman**
-
-CSE Undergraduate, CUET
-
-Python • Django • Machine Learning • Cybersecurity
+- Wrong Primary Key
+- Missing Foreign Keys
+- Missing Constraints
+- Poor normalization
 
 ---
 
-# 📄 License
+# Chapter 2 — ORM (Object Relational Mapper)
 
-This project is developed for educational purposes.
+## 🎯 Purpose
+
+The ORM converts Python code into SQL.
+
+Instead of writing SQL manually:
+
+```sql
+SELECT *
+FROM Donors;
+```
+
+We write:
+
+```python
+Donor.objects.all()
+```
+
+---
+
+## Flow
+
+```
+Python
+    │
+ORM
+    │
+SQL
+    │
+PostgreSQL
+```
+
+---
+
+## Frequently Used Methods
+
+```python
+Donor.objects.all()
+
+Donor.objects.get(...)
+
+Donor.objects.filter(...)
+
+Donor.objects.create(...)
+```
+
+---
+
+## Files
+
+```
+*/models.py
+```
+
+---
+
+## Common Mistakes
+
+- Writing raw SQL unnecessarily.
+- Forgetting the ORM already provides the query.
+
+---
+
+# Chapter 3 — Models
+
+## 🎯 Purpose
+
+Models represent database tables as Python classes.
+
+---
+
+## Files
+
+```
+users/models.py
+
+donors/models.py
+
+requests/models.py
+
+donations/models.py
+
+inventory/models.py
+
+branches/models.py
+
+transport/models.py
+
+payment/models.py
+```
+
+---
+
+## Example
+
+```python
+class Donor(models.Model):
+
+    national_ID = models.CharField(...)
+
+    full_name = models.CharField(...)
+```
+
+---
+
+## Flow
+
+```
+Model
+    │
+ORM
+    │
+PostgreSQL
+```
+
+---
+
+## Common Mistakes
+
+- Wrong field type
+- Wrong ForeignKey
+- Missing constraints
+
+---
+
+# Chapter 4 — Migrations
+
+## 🎯 Purpose
+
+Synchronize Django Models with PostgreSQL.
+
+---
+
+## Files
+
+```
+*/migrations/
+```
+
+---
+
+## Commands
+
+Generate migrations
+
+```bash
+python manage.py makemigrations
+```
+
+Apply migrations
+
+```bash
+python manage.py migrate
+```
+
+Database-first approach
+
+```bash
+python manage.py migrate --fake-initial
+```
+
+---
+
+## Flow
+
+```
+Models
+    │
+makemigrations
+    │
+Migration Files
+    │
+migrate
+    │
+Database Updated
+```
+
+---
+
+## Common Mistakes
+
+- Running migrate before makemigrations
+- Editing migration files manually
+
+---
+
+# Chapter 5 — Django Admin
+
+## 🎯 Purpose
+
+Provides an administration panel to manage database records.
+
+---
+
+## Files
+
+```
+*/admin.py
+```
+
+---
+
+## Example
+
+```python
+from django.contrib import admin
+from .models import Donor
+
+admin.site.register(Donor)
+```
+
+---
+
+## Commands
+
+Create Superuser
+
+```bash
+python manage.py createsuperuser
+```
+
+Run Server
+
+```bash
+python manage.py runserver
+```
+
+Admin URL
+
+```
+http://127.0.0.1:8000/admin/
+```
+
+---
+
+## Flow
+
+```
+Superuser
+      │
+Django Admin
+      │
+Models
+      │
+Database
+```
+
+---
+
+## Common Mistakes
+
+- Forgetting to register models
+- Trying to register models with composite primary keys
+
+---
+
+# Chapter 6 — Serializer
+
+## 🎯 Purpose
+
+Converts
+
+```
+Python Objects ⇄ JSON
+```
+
+Also validates incoming data.
+
+---
+
+## Files
+
+```
+donors/serializers.py
+```
+
+---
+
+## Code
+
+```python
+from rest_framework import serializers
+from .models import Donor
+
+
+class DonorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Donor
+        fields = "__all__"
+```
+
+---
+
+## Flow
+
+```
+Python Objects
+        │
+Serializer
+        │
+JSON
+```
+
+---
+
+## Common Mistakes
+
+- Forgetting `many=True`
+- Wrong model
+- Missing serializer
+
+---
+
+# Chapter 7 — APIView
+
+## 🎯 Purpose
+
+Receives HTTP requests.
+
+Coordinates:
+
+- Models
+- ORM
+- Serializer
+- Response
+
+---
+
+## Files
+
+```
+donors/views.py
+```
+
+---
+
+## Code
+
+```python
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+from .models import Donor
+from .serializers import DonorSerializer
+
+
+class DonorListAPIView(APIView):
+
+    def get(self, request):
+
+        donors = Donor.objects.all()
+
+        serializer = DonorSerializer(
+            donors,
+            many=True
+        )
+
+        return Response(serializer.data)
+```
+
+---
+
+## Flow
+
+```
+GET Request
+      │
+APIView
+      │
+ORM
+      │
+Serializer
+      │
+Response
+```
+
+---
+
+## Common Mistakes
+
+- Returning Python objects directly
+- Forgetting the serializer
+- Forgetting Response()
+
+---
+
+# Chapter 8 — URL Routing
+
+## 🎯 Purpose
+
+Maps URLs to API Views.
+
+---
+
+## Files
+
+Project URLs
+
+```
+bloodlink/urls.py
+```
+
+App URLs
+
+```
+donors/urls.py
+```
+
+---
+
+## Project URL
+
+```python
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+
+    path(
+        "api/donors/",
+        include("donors.urls")
+    ),
+]
+```
+
+---
+
+## App URL
+
+```python
+from django.urls import path
+
+from .views import DonorListAPIView
+
+urlpatterns = [
+
+    path(
+        "",
+        DonorListAPIView.as_view(),
+        name="donor-list"
+    ),
+
+]
+```
+
+---
+
+## Flow
+
+```
+Browser
+      │
+Project URLs
+      │
+App URLs
+      │
+APIView
+```
+
+---
+
+## Common Mistakes
+
+- Forgetting include()
+- Wrong URL
+- Missing `.as_view()`
+
+---
+
+# 🎉 First Working REST API
+
+Endpoint
+
+```
+GET /api/donors/
+```
+
+Browser
+
+```
+http://127.0.0.1:8000/api/donors/
+```
+
+Current Response
+
+```json
+[]
+```
+
+Meaning:
+
+- URL Routing ✅
+- APIView ✅
+- Serializer ✅
+- ORM ✅
+- PostgreSQL ✅
+
+The table is simply empty.
+
+---
+
+# 📈 Current Progress
+
+| Chapter | Status |
+|----------|--------|
+| Database | ✅ |
+| ORM | ✅ |
+| Models | ✅ |
+| Migrations | ✅ |
+| Django Admin | ✅ |
+| Serializer | ✅ |
+| APIView | ✅ |
+| URL Routing | ✅ |
+| First GET API | ✅ |
+| POST API | ⏳ |
+| PUT | ⏳ |
+| PATCH | ⏳ |
+| DELETE | ⏳ |
+| Authentication | ⏳ |
+| JWT | ⏳ |
+| RBAC | ⏳ |
+| Flutter Integration | ⏳ |
+
+---
+
+# 📌 Learning Philosophy
+
+Before writing code, always understand:
+
+1. **Why is it needed?**
+2. **What problem does it solve?**
+3. **How does it work internally?**
+4. **Then write the implementation.**
+
+Following this approach makes it easier to remember concepts and apply them to new modules.
