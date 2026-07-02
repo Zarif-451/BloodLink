@@ -114,14 +114,19 @@ BloodLink/
 - Initial Database Migrations
 - Database-First Integration (`migrate --fake-initial`)
 - Django Admin Configuration
-- Donor GET API
-- Donor POST API
+- Donor CRUD API
+  - ✅ GET (List)
+  - ✅ GET (Detail)
+  - ✅ POST
+  - ✅ PUT
+  - ✅ PATCH
+  - ✅ DELETE
 
 ---
 
 ## 🚧 In Progress
 
-- Donor CRUD Operations (PUT, PATCH, DELETE)
+- CRUD APIs for Remaining Modules
 - REST API Development
 - Authentication & Authorization
 
@@ -129,9 +134,9 @@ BloodLink/
 
 ## 📅 Planned
 
+- JWT Authentication
 - Role-Based Access Control (RBAC)
 - Business Logic Implementation
-- Remaining API Modules
 - Flutter Backend Integration
 - Testing & Validation
 - Deployment
@@ -226,10 +231,10 @@ Flutter Frontend
 | Django Models | ✅ Completed |
 | Database Migrations | ✅ Completed |
 | Django Admin | ✅ Completed |
-| Donor GET API | ✅ Completed |
-| Donor POST API | ✅ Completed |
-| Remaining CRUD APIs | 🚧 In Progress |
-| Authentication | ⏳ Planned |
+| Donor CRUD APIs | ✅ Completed |
+| Remaining Module APIs | 🚧 In Progress |
+| Authentication (JWT) | ⏳ Planned |
+| Role-Based Access Control | ⏳ Planned |
 | Flutter Integration | ⏳ Planned |
 | Deployment | ⏳ Planned |
 
@@ -244,7 +249,18 @@ docs/
 └── Backend_Cookbook.md
 ```
 
-The cookbook contains implementation notes, architecture diagrams, learning progress, API development, and backend concepts documented throughout the project.
+The Backend Cookbook documents the concepts learned while building BloodLink, including:
+
+- Django ORM
+- Models
+- Migrations
+- Django Admin
+- Serializers
+- APIViews
+- URL Routing
+- Complete CRUD Operations
+- Backend Architecture
+- Development Workflow
 
 ---
 
