@@ -618,7 +618,6 @@ The table is simply empty.
 
 ---
 
-````md
 # Chapter 9 — POST API
 
 ## 🎯 Purpose
@@ -883,8 +882,6 @@ This completes the **Create (C)** operation of CRUD.
 
 ```text
 CRUD Progress
-
-````
 
 
 # 📈 Current Progress
