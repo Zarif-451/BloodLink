@@ -27,7 +27,7 @@ The project follows a **Database-First Development Approach**, where the databas
 
 - Python
 - Django
-- Django REST Framework (In Progress)
+- Django REST Framework
 
 ## Database
 
@@ -35,7 +35,7 @@ The project follows a **Database-First Development Approach**, where the databas
 
 ## Frontend
 
-- Flutter (In Development)
+- Flutter *(In Development)*
 
 ## Version Control
 
@@ -65,6 +65,9 @@ BloodLink/
 │   ├── bloodlink_schema.sql
 │   ├── BloodLink_ERD.png
 │   └── BloodLink_Relational_Mapping.pdf
+│
+├── docs/
+│   └── Backend_Cookbook.md
 │
 ├── frontend/
 │
@@ -111,23 +114,24 @@ BloodLink/
 - Initial Database Migrations
 - Database-First Integration (`migrate --fake-initial`)
 - Django Admin Configuration
+- Donor GET API
+- Donor POST API
 
 ---
 
 ## 🚧 In Progress
 
-- Django REST Framework (DRF)
+- Donor CRUD Operations (PUT, PATCH, DELETE)
 - REST API Development
-- Serializers
-- CRUD Operations
+- Authentication & Authorization
 
 ---
 
 ## 📅 Planned
 
-- Authentication & Authorization
 - Role-Based Access Control (RBAC)
 - Business Logic Implementation
+- Remaining API Modules
 - Flutter Backend Integration
 - Testing & Validation
 - Deployment
@@ -174,7 +178,9 @@ DB_PORT=5432
 python manage.py migrate
 ```
 
-> **Note:** Since this project follows a Database-First approach, the initial migration was applied using:
+> **Database-First Note**
+>
+> Since the PostgreSQL schema already existed before Django, the initial migration was applied using:
 
 ```bash
 python manage.py migrate --fake-initial
@@ -200,9 +206,11 @@ PostgreSQL Database
     ↓
 Django Models
     ↓
+Database Migrations
+    ↓
 Django Admin
     ↓
-REST API
+REST APIs
     ↓
 Flutter Frontend
 ```
@@ -216,13 +224,27 @@ Flutter Frontend
 | Database Design | ✅ Completed |
 | PostgreSQL Database | ✅ Completed |
 | Django Models | ✅ Completed |
+| Database Migrations | ✅ Completed |
 | Django Admin | ✅ Completed |
-| REST API | 🚧 In Progress |
+| Donor GET API | ✅ Completed |
+| Donor POST API | ✅ Completed |
+| Remaining CRUD APIs | 🚧 In Progress |
 | Authentication | ⏳ Planned |
-| Business Logic | ⏳ Planned |
 | Flutter Integration | ⏳ Planned |
-| Testing | ⏳ Planned |
+| Deployment | ⏳ Planned |
 
+---
+
+# 📚 Documentation
+
+Project documentation is maintained in:
+
+```text
+docs/
+└── Backend_Cookbook.md
+```
+
+The cookbook contains implementation notes, architecture diagrams, learning progress, API development, and backend concepts documented throughout the project.
 
 ---
 
