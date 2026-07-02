@@ -11,8 +11,9 @@ The project follows a **Database-First Development Approach**, where the databas
 - 👤 User Management (SuperAdmin, Admin, Staff)
 - 🩸 Donor Management
 - 💉 Blood Donation Tracking
-- 🧪 Screening & Test Records
 - 🏥 Blood Request Management
+- 👥 Requester Management
+- 🏢 Branch Management
 - 📦 Blood Inventory Management
 - 🚚 Transportation Tracking
 - 💰 Payment Management
@@ -101,11 +102,16 @@ BloodLink/
 
 ## ✅ Completed
 
+### Database
+
 - Database Design (ERD)
 - Relational Mapping
 - PostgreSQL Database Design
 - SQL Schema
 - Database Constraints
+
+### Django Setup
+
 - Django Project Setup
 - Django ↔ PostgreSQL Connection
 - Environment Variable Configuration (.env)
@@ -114,31 +120,91 @@ BloodLink/
 - Initial Database Migrations
 - Database-First Integration (`migrate --fake-initial`)
 - Django Admin Configuration
-- Donor CRUD API
-  - ✅ GET (List)
-  - ✅ GET (Detail)
-  - ✅ POST
-  - ✅ PUT
-  - ✅ PATCH
-  - ✅ DELETE
+
+### Django REST Framework
+
+- Django REST Framework Setup
+- Serializer Implementation
+- APIView Implementation
+- URL Routing
+
+### CRUD REST APIs
+
+#### 👤 Users
+- ✅ GET (List)
+- ✅ GET (Detail)
+- ✅ POST
+- ✅ PUT
+- ✅ PATCH
+- ✅ DELETE
+
+#### 🩸 Donors
+- ✅ GET (List)
+- ✅ GET (Detail)
+- ✅ POST
+- ✅ PUT
+- ✅ PATCH
+- ✅ DELETE
+
+#### 👥 Requesters
+- ✅ GET (List)
+- ✅ GET (Detail)
+- ✅ POST
+- ✅ PUT
+- ✅ PATCH
+- ✅ DELETE
+
+#### 🏥 Requests
+- ✅ GET (List)
+- ✅ GET (Detail)
+- ✅ POST
+- ✅ PUT
+- ✅ PATCH
+- ✅ DELETE
+
+#### 🏢 Branches
+- ✅ GET (List)
+- ✅ GET (Detail)
+- ✅ POST
+- ✅ PUT
+- ✅ PATCH
+- ✅ DELETE
+
+#### 📦 Blood Inventory
+- ✅ GET (List)
+- ✅ GET (Detail)
+- ✅ POST
+- ✅ PUT
+- ✅ PATCH
+- ✅ DELETE
+
+#### 💉 Donations
+- ✅ GET (List)
+- ✅ GET (Detail)
+- ✅ POST
+- ✅ PUT
+- ✅ PATCH
+- ✅ DELETE
 
 ---
 
 ## 🚧 In Progress
 
-- CRUD APIs for Remaining Modules
-- REST API Development
-- Authentication & Authorization
+- Authentication
+- JWT Authentication
+- Role-Based Access Control (RBAC)
+- Business Logic Implementation
 
 ---
 
 ## 📅 Planned
 
-- JWT Authentication
-- Role-Based Access Control (RBAC)
-- Business Logic Implementation
+- Screening Workflow
+- Blood Allocation Workflow
+- Transportation Workflow
+- Payment Workflow
 - Flutter Backend Integration
-- Testing & Validation
+- API Testing & Validation
 - Deployment
 
 ---
@@ -185,7 +251,7 @@ python manage.py migrate
 
 > **Database-First Note**
 >
-> Since the PostgreSQL schema already existed before Django, the initial migration was applied using:
+> Since the PostgreSQL database schema already existed before Django, the initial migration was synchronized using:
 
 ```bash
 python manage.py migrate --fake-initial
@@ -215,7 +281,13 @@ Database Migrations
     ↓
 Django Admin
     ↓
-REST APIs
+REST APIs (CRUD)
+    ↓
+Authentication (JWT)
+    ↓
+Role-Based Access Control
+    ↓
+Business Logic
     ↓
 Flutter Frontend
 ```
@@ -231,10 +303,18 @@ Flutter Frontend
 | Django Models | ✅ Completed |
 | Database Migrations | ✅ Completed |
 | Django Admin | ✅ Completed |
-| Donor CRUD APIs | ✅ Completed |
-| Remaining Module APIs | 🚧 In Progress |
-| Authentication (JWT) | ⏳ Planned |
+| Django REST Framework Setup | ✅ Completed |
+| User CRUD API | ✅ Completed |
+| Donor CRUD API | ✅ Completed |
+| Requester CRUD API | ✅ Completed |
+| Request CRUD API | ✅ Completed |
+| Branch CRUD API | ✅ Completed |
+| Blood Inventory CRUD API | ✅ Completed |
+| Donation CRUD API | ✅ Completed |
+| Authentication | 🚧 In Progress |
+| JWT Authentication | ⏳ Planned |
 | Role-Based Access Control | ⏳ Planned |
+| Business Logic | ⏳ Planned |
 | Flutter Integration | ⏳ Planned |
 | Deployment | ⏳ Planned |
 
@@ -249,18 +329,20 @@ docs/
 └── Backend_Cookbook.md
 ```
 
-The Backend Cookbook documents the concepts learned while building BloodLink, including:
+The **Backend Cookbook** documents the concepts learned while building BloodLink, including:
 
+- Backend Architecture
+- Database-First Development
 - Django ORM
 - Models
-- Migrations
+- Database Migrations
 - Django Admin
 - Serializers
 - APIViews
 - URL Routing
 - Complete CRUD Operations
-- Backend Architecture
-- Development Workflow
+- REST API Development Workflow
+- Learning Notes & Best Practices
 
 ---
 
