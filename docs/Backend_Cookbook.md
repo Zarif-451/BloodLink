@@ -882,7 +882,7 @@ This completes the **Create (C)** operation of CRUD.
 
 ```text
 CRUD Progress
-
+```
 
 # 📈 Current Progress
 
