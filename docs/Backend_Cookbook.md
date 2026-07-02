@@ -618,6 +618,275 @@ The table is simply empty.
 
 ---
 
+````md
+# Chapter 9 — POST API
+
+## 🎯 Purpose
+
+A **POST API** receives data from the client, validates it, creates a new record in the database, and returns an appropriate HTTP response.
+
+Unlike **GET**, which only retrieves data, **POST** creates a new resource in the database.
+
+---
+
+## Files
+
+```
+donors/views.py
+```
+
+---
+
+## Endpoint
+
+```http
+POST /api/donors/
+```
+
+---
+
+## Code
+
+```python
+from rest_framework import status
+
+class DonorListAPIView(APIView):
+
+    def post(self, request):
+
+        serializer = DonorSerializer(
+            data=request.data
+        )
+
+        if serializer.is_valid():
+
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+```
+
+---
+
+## Flow
+
+```text
+Flutter / Browser
+        │
+HTTP POST Request
+        │
+request.data
+        │
+DonorSerializer(data=request.data)
+        │
+serializer.is_valid()
+      /           \
+   False         True
+     │             │
+serializer.errors  serializer.save()
+     │             │
+400 Bad Request  Django ORM
+                    │
+                PostgreSQL
+                    │
+             serializer.data
+                    │
+             HTTP 201 Created
+                    │
+             Browser / Flutter
+```
+
+---
+
+## Request Example
+
+```json
+{
+    "national_ID": "12345678901234567",
+    "full_name": "Test Donor",
+    "date_of_birth": "2002-01-01",
+    "gender": "Male",
+    "blood_group": "A+",
+    "street": "Road 1",
+    "area": "Agrabad",
+    "city": "Chattogram",
+    "user": "USR001"
+}
+```
+
+---
+
+## Success Response
+
+**HTTP 201 Created**
+
+```json
+{
+    "national_ID": "12345678901234567",
+    "full_name": "Test Donor",
+    "date_of_birth": "2002-01-01",
+    "gender": "Male",
+    "blood_group": "A+",
+    "street": "Road 1",
+    "area": "Agrabad",
+    "city": "Chattogram",
+    "user": "USR001"
+}
+```
+
+---
+
+## Error Response
+
+**HTTP 400 Bad Request**
+
+```json
+{
+    "blood_group": [
+        "\"ABC\" is not a valid choice."
+    ]
+}
+```
+
+---
+
+## Internal Working
+
+1. Client sends JSON data.
+2. Data is received through `request.data`.
+3. `DonorSerializer(data=request.data)` accepts the incoming data.
+4. `serializer.is_valid()` validates:
+   - Required fields
+   - Data types
+   - Choices
+   - Validators
+5. If validation succeeds:
+   - `serializer.save()` creates a new `Donor`.
+   - Django ORM inserts the record into PostgreSQL.
+6. The API returns:
+   - The created donor
+   - **HTTP 201 Created**
+7. If validation fails:
+   - `serializer.errors`
+   - **HTTP 400 Bad Request**
+
+---
+
+## Important Concepts
+
+### `request.data`
+
+Contains the JSON sent by the client.
+
+```python
+serializer = DonorSerializer(
+    data=request.data
+)
+```
+
+---
+
+### `serializer.is_valid()`
+
+Validates incoming data before saving it.
+
+Returns:
+
+```python
+True
+```
+
+or
+
+```python
+False
+```
+
+---
+
+### `serializer.save()`
+
+Creates a new database record using the validated data.
+
+Internally, it is similar to:
+
+```python
+Donor.objects.create(...)
+```
+
+---
+
+### `serializer.errors`
+
+Contains validation errors if validation fails.
+
+Example:
+
+```json
+{
+    "blood_group": [
+        "\"ABC\" is not a valid choice."
+    ]
+}
+```
+
+---
+
+## HTTP Status Codes
+
+| Status Code | Meaning |
+|--------------|---------|
+| **201 Created** | Resource created successfully |
+| **400 Bad Request** | Validation failed |
+
+---
+
+## GET vs POST
+
+| GET | POST |
+|------|------|
+| Reads existing data | Creates new data |
+| Does not modify the database | Inserts a new record |
+| Returns **200 OK** | Returns **201 Created** |
+
+---
+
+## Common Mistakes
+
+- Forgetting `data=request.data`
+- Calling `serializer.save()` before `serializer.is_valid()`
+- Forgetting to return `serializer.errors`
+- Returning **200 OK** instead of **201 Created**
+- Sending an invalid Foreign Key (`user`)
+- Missing required fields
+
+---
+
+## Chapter Summary
+
+After completing this chapter, you can:
+
+- Receive JSON from the client.
+- Validate incoming data.
+- Create new database records.
+- Return proper HTTP responses.
+- Build working POST APIs using Django REST Framework.
+
+This completes the **Create (C)** operation of CRUD.
+
+```text
+CRUD Progress
+
+````
+
+
 # 📈 Current Progress
 
 | Chapter | Status |
@@ -631,7 +900,7 @@ The table is simply empty.
 | APIView | ✅ |
 | URL Routing | ✅ |
 | First GET API | ✅ |
-| POST API | ⏳ |
+| POST API | ✅ |
 | PUT | ⏳ |
 | PATCH | ⏳ |
 | DELETE | ⏳ |
