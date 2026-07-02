@@ -880,9 +880,441 @@ After completing this chapter, you can:
 
 This completes the **Create (C)** operation of CRUD.
 
-```text
-CRUD Progress
+# Chapter 10 — PUT API
+
+## 🎯 Purpose
+
+A **PUT API** replaces an existing resource with new data.
+
+Unlike **POST**, PUT does **not** create a new resource. Instead, it updates an existing one by replacing its entire representation.
+
+---
+
+## Files
+
 ```
+donors/views.py
+```
+
+---
+
+## Endpoint
+
+```http
+PUT /api/donors/<national_ID>/
+```
+
+---
+
+## Code
+
+```python
+def put(self, request, national_ID):
+
+    donor = get_object_or_404(
+        Donor,
+        national_ID=national_ID
+    )
+
+    serializer = DonorSerializer(
+        instance=donor,
+        data=request.data
+    )
+
+    if serializer.is_valid():
+
+        serializer.save()
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
+
+    return Response(
+        serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST
+    )
+```
+
+---
+
+## Flow
+
+```text
+PUT Request
+      │
+national_ID
+      │
+get_object_or_404()
+      │
+ Existing?
+  /        \
+No          Yes
+│            │
+404       Serializer
+             │
+      instance + data
+             │
+      serializer.is_valid()
+        /            \
+     False          True
+       │              │
+   400 Bad       serializer.save()
+                     │
+                 PostgreSQL
+                     │
+               HTTP 200 OK
+```
+
+---
+
+## HTTP Status Codes
+
+| Status Code | Meaning |
+|--------------|---------|
+| **200 OK** | Resource updated successfully |
+| **400 Bad Request** | Validation failed |
+| **404 Not Found** | Resource does not exist |
+
+---
+
+## Important Concepts
+
+### instance=
+
+```python
+serializer = DonorSerializer(
+    instance=donor,
+    data=request.data
+)
+```
+
+Tells the serializer which object should be updated.
+
+---
+
+### get_object_or_404()
+
+```python
+donor = get_object_or_404(
+    Donor,
+    national_ID=national_ID
+)
+```
+
+Automatically returns **404 Not Found** if the object does not exist.
+
+---
+
+## PUT vs POST
+
+| POST | PUT |
+|------|-----|
+| Creates a new object | Replaces an existing object |
+| Returns 201 Created | Returns 200 OK |
+| No existing instance | Requires existing instance |
+
+---
+
+## Common Mistakes
+
+- Forgetting `instance=`
+- Using POST instead of PUT
+- Updating a non-existing object
+- Returning 201 instead of 200
+
+---
+
+## Chapter Summary
+
+After this chapter you can:
+
+- Update existing database records.
+- Retrieve an object using its primary key.
+- Return proper REST responses.
+- Handle missing resources using `get_object_or_404()`.
+
+---
+
+# Chapter 11 — PATCH API
+
+## 🎯 Purpose
+
+A **PATCH API** updates only the fields supplied by the client.
+
+Unlike PUT, PATCH does **not** require sending the entire resource.
+
+---
+
+## Files
+
+```
+donors/views.py
+```
+
+---
+
+## Endpoint
+
+```http
+PATCH /api/donors/<national_ID>/
+```
+
+---
+
+## Code
+
+```python
+def patch(self, request, national_ID):
+
+    donor = get_object_or_404(
+        Donor,
+        national_ID=national_ID
+    )
+
+    serializer = DonorSerializer(
+        instance=donor,
+        data=request.data,
+        partial=True
+    )
+
+    if serializer.is_valid():
+
+        serializer.save()
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
+
+    return Response(
+        serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST
+    )
+```
+
+---
+
+## Flow
+
+```text
+PATCH Request
+       │
+national_ID
+       │
+get_object_or_404()
+       │
+Serializer
+       │
+partial=True
+       │
+Validate supplied fields
+       │
+serializer.save()
+       │
+PostgreSQL
+       │
+HTTP 200 OK
+```
+
+---
+
+## Important Concepts
+
+### partial=True
+
+```python
+serializer = DonorSerializer(
+    instance=donor,
+    data=request.data,
+    partial=True
+)
+```
+
+Only validates fields included in the request.
+
+Missing fields are ignored.
+
+---
+
+## Example
+
+Request
+
+```json
+{
+    "city":"Rajshahi"
+}
+```
+
+Only the city changes.
+
+Everything else remains unchanged.
+
+---
+
+## PUT vs PATCH
+
+| PUT | PATCH |
+|------|--------|
+| Complete replacement | Partial update |
+| All required fields | Only supplied fields |
+| Entire object | Changed fields only |
+
+---
+
+## Common Mistakes
+
+- Forgetting `partial=True`
+- Assuming PATCH skips validation
+- Using PATCH for complete replacement
+
+---
+
+## Chapter Summary
+
+After this chapter you can:
+
+- Partially update database records.
+- Validate only changed fields.
+- Use PATCH correctly in REST APIs.
+
+---
+
+# Chapter 12 — DELETE API
+
+## 🎯 Purpose
+
+A **DELETE API** removes an existing resource from the database.
+
+Unlike POST, PUT and PATCH, DELETE does not require a serializer because no incoming data needs validation.
+
+---
+
+## Files
+
+```
+donors/views.py
+```
+
+---
+
+## Endpoint
+
+```http
+DELETE /api/donors/<national_ID>/
+```
+
+---
+
+## Code
+
+```python
+def delete(self, request, national_ID):
+
+    donor = get_object_or_404(
+        Donor,
+        national_ID=national_ID
+    )
+
+    donor.delete()
+
+    return Response(
+        status=status.HTTP_204_NO_CONTENT
+    )
+```
+
+---
+
+## Flow
+
+```text
+DELETE Request
+        │
+national_ID
+        │
+get_object_or_404()
+        │
+ Existing?
+ /        \
+No        Yes
+│           │
+404     donor.delete()
+             │
+        PostgreSQL
+             │
+     HTTP 204 No Content
+```
+
+---
+
+## HTTP Status Codes
+
+| Status Code | Meaning |
+|--------------|---------|
+| **204 No Content** | Resource deleted successfully |
+| **404 Not Found** | Resource not found |
+
+---
+
+## Important Concepts
+
+### delete()
+
+```python
+donor.delete()
+```
+
+Deletes the object from PostgreSQL.
+
+Unlike POST, PUT and PATCH, no serializer is required.
+
+---
+
+## Why 204?
+
+A successful DELETE returns
+
+```http
+204 No Content
+```
+
+because the deleted resource no longer exists.
+
+---
+
+## Common Mistakes
+
+- Using serializer unnecessarily.
+- Returning deleted data.
+- Returning 200 instead of 204.
+- Forgetting `get_object_or_404()`.
+
+---
+
+## Chapter Summary
+
+After this chapter you can:
+
+- Delete database records.
+- Return correct REST status codes.
+- Complete the CRUD cycle using Django REST Framework.
+
+---
+
+# 🎉 CRUD Completed
+
+```
+CRUD Progress
+
+Create (POST)    ✅
+Read (GET)       ✅
+Update (PUT)     ✅
+Update (PATCH)   ✅
+Delete (DELETE)  ✅
+```
+
+---
 
 # 📈 Current Progress
 
@@ -896,17 +1328,16 @@ CRUD Progress
 | Serializer | ✅ |
 | APIView | ✅ |
 | URL Routing | ✅ |
-| First GET API | ✅ |
+| GET API | ✅ |
 | POST API | ✅ |
-| PUT | ⏳ |
-| PATCH | ⏳ |
-| DELETE | ⏳ |
+| PUT API | ✅ |
+| PATCH API | ✅ |
+| DELETE API | ✅ |
 | Authentication | ⏳ |
 | JWT | ⏳ |
 | RBAC | ⏳ |
 | Flutter Integration | ⏳ |
-
----
+```
 
 # 📌 Learning Philosophy
 
