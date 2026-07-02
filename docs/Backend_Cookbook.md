@@ -1337,7 +1337,7 @@ Delete (DELETE)  ✅
 | JWT | ⏳ |
 | RBAC | ⏳ |
 | Flutter Integration | ⏳ |
-```
+
 
 # 📌 Learning Philosophy
 
@@ -1347,5 +1347,3 @@ Before writing code, always understand:
 2. **What problem does it solve?**
 3. **How does it work internally?**
 4. **Then write the implementation.**
-
-Following this approach makes it easier to remember concepts and apply them to new modules.
