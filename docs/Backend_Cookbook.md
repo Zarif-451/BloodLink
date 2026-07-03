@@ -1876,6 +1876,569 @@ After this chapter, you understand
 - Hashing is one of the most important security practices in backend development.
 ---
 
+# Chapter 14 — JWT (JSON Web Token) Authentication
+
+## 🎯 Purpose
+
+Authentication answers one simple question:
+
+> **Who are you?**
+
+Before allowing access to protected resources, the server must verify the identity of the client.
+
+In BloodLink, only:
+
+- SuperAdmin
+- Admin
+- Staff
+
+are allowed to log into the system.
+
+Normal donors and blood requesters do **not** log in.
+
+---
+
+# Why Authentication?
+
+Imagine BloodLink has no authentication.
+
+Anyone could send
+
+```
+POST /api/donations/
+```
+
+and create fake donation records.
+
+Anyone could delete inventory.
+
+Anyone could modify blood requests.
+
+Anyone could change reports.
+
+Clearly,
+
+this is unacceptable.
+
+Authentication prevents unauthorized users from accessing protected APIs.
+
+---
+
+# Before Authentication
+
+```
+Browser
+
+      │
+
+POST /api/donors/
+
+      │
+
+APIView
+
+      │
+
+Database
+```
+
+The server has no idea who sent the request.
+
+---
+
+# After Authentication
+
+```
+Browser
+
+      │
+
+Authorization Header
+
+Bearer <JWT>
+
+      │
+
+APIView
+
+      │
+
+Verify JWT
+
+      │
+
+Authenticated User
+
+      │
+
+Database
+```
+
+Now every request has an identity.
+
+---
+
+# What is JWT?
+
+JWT stands for
+
+```
+JSON Web Token
+```
+
+It is a secure token that proves a user has already logged in.
+
+Instead of sending
+
+```
+Email
+
+Password
+```
+
+on every request,
+
+the client sends
+
+```
+JWT
+```
+
+---
+
+# Why JWT?
+
+Without JWT
+
+```
+Login
+
+↓
+
+Email
+Password
+
+↓
+
+Next Request
+
+↓
+
+Email
+Password
+
+↓
+
+Next Request
+
+↓
+
+Email
+Password
+
+↓
+
+Next Request
+
+↓
+
+Email
+Password
+```
+
+Credentials travel through the network repeatedly.
+
+---
+
+With JWT
+
+```
+Login
+
+↓
+
+Email
+Password
+
+↓
+
+JWT
+
+↓
+
+Future Requests
+
+↓
+
+Bearer JWT
+
+↓
+
+Bearer JWT
+
+↓
+
+Bearer JWT
+```
+
+The password is never sent again.
+
+---
+
+# Advantages
+
+✔ Faster
+
+✔ Stateless
+
+✔ More secure
+
+✔ Industry Standard
+
+✔ Works well with Flutter
+
+---
+
+# JWT Structure
+
+A JWT consists of three parts.
+
+```
+Header
+
+.
+
+Payload
+
+.
+
+Signature
+```
+
+Example
+
+```
+eyJhbGc...
+
+.
+
+eyJ1c2VyX0lE...
+
+.
+
+xP7T9...
+```
+
+These three sections are separated by dots.
+
+---
+
+# Header
+
+The Header stores metadata.
+
+Example
+
+```json
+{
+    "alg":"HS256",
+
+    "typ":"JWT"
+}
+```
+
+Meaning
+
+```
+Algorithm
+
+↓
+
+HS256
+
+Type
+
+↓
+
+JWT
+```
+
+---
+
+# Payload
+
+The Payload stores information about the user.
+
+In BloodLink we store
+
+```json
+{
+    "user_ID":"USR003",
+
+    "role":"Admin",
+
+    "exp":1780000000
+}
+```
+
+Notice
+
+We do **NOT** store
+
+```
+Password
+
+Email
+```
+
+Passwords should never appear inside a JWT.
+
+---
+
+# Signature
+
+The Signature prevents token tampering.
+
+Suppose someone changes
+
+```
+role
+
+↓
+
+Staff
+
+to
+
+↓
+
+SuperAdmin
+```
+
+The Signature becomes invalid.
+
+The server immediately rejects the token.
+
+---
+
+# Complete JWT Flow
+
+```
+User
+
+│
+
+Email
+
+Password
+
+│
+
+Login API
+
+│
+
+check_password()
+
+│
+
+generate_access_token()
+
+│
+
+JWT
+
+│
+
+Flutter / Browser
+
+│
+
+Store Token
+
+│
+
+────────────────────────────
+
+│
+
+Future Request
+
+│
+
+Authorization Header
+
+Bearer <JWT>
+
+│
+
+Verify Token
+
+│
+
+Load User
+
+│
+
+request.user
+
+│
+
+APIView
+```
+
+---
+
+# Folder Structure
+
+```
+authentication/
+
+│
+
+├── views.py
+
+├── serializers.py
+
+├── jwt_utils.py
+
+├── authentication.py
+
+└── urls.py
+```
+
+Each file has a specific responsibility.
+
+---
+
+# Responsibilities
+
+## serializers.py
+
+Validates
+
+```
+Email
+
+Password
+```
+
+---
+
+## views.py
+
+Handles
+
+```
+Login API
+
+Profile API
+```
+
+---
+
+## jwt_utils.py
+
+Responsible for
+
+```
+Generate JWT
+
+Verify JWT
+```
+
+---
+
+## authentication.py
+
+Reads
+
+```
+Authorization Header
+```
+
+Verifies the JWT.
+
+Loads the corresponding User.
+
+Stores
+
+```python
+request.user
+```
+
+---
+
+## urls.py
+
+Connects URLs to the Authentication APIs.
+
+---
+
+# Why We Chose Custom JWT
+
+There were two possible approaches.
+
+## Option A
+
+Use Django's built-in authentication system.
+
+Advantages
+
+- Production standard.
+- Less custom code.
+- Better integration with Django.
+
+Disadvantages
+
+- Harder to understand initially.
+- Requires inheriting from Django's authentication models.
+
+---
+
+## Option B (Chosen)
+
+Build our own JWT authentication.
+
+Advantages
+
+- Easier to learn.
+- Full control over every step.
+- Better understanding of backend authentication.
+
+Disadvantages
+
+- More code.
+- Requires writing our own authentication class.
+
+For BloodLink, we intentionally chose **Option B** because the goal of the project is not only to build software, but also to understand how authentication works internally.
+
+---
+
+# Authentication Components
+
+Our authentication system consists of four major parts.
+
+```
+Login Serializer
+
+↓
+
+Login API
+
+↓
+
+JWT Utility
+
+↓
+
+JWT Authentication Class
+```
+
+Each component has a different responsibility.
+
+The next sections will implement each of these components step by step.
+
 # 📈 Current Progress
 
 | Chapter | Status |
