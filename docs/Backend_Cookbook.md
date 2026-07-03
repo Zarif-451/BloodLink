@@ -3712,27 +3712,821 @@ After this chapter you understand
 - Protected APIs
 - How Django REST Framework authenticates requests internally
 
+# Chapter 15 — API Testing with Postman
+
+## 🎯 Purpose
+
+Building an API is only half of backend development.
+
+Every API must be tested before it is used by Flutter or any frontend application.
+
+Postman acts as a client that sends HTTP requests to the backend exactly like Flutter would.
+
+This allows us to verify that our APIs work correctly before integrating the frontend.
+
+---
+
+# Why Postman?
+
+Without Postman
+
+```
+Backend
+
+↓
+
+Flutter
+
+↓
+
+Test
+```
+
+Every backend change requires rebuilding or rerunning the frontend.
+
+---
+
+With Postman
+
+```
+Backend
+
+↓
+
+Postman
+
+↓
+
+Immediate Testing
+```
+
+No frontend is required.
+
+---
+
+# Advantages
+
+✔ Test APIs independently.
+
+✔ Send custom HTTP requests.
+
+✔ Send JSON data.
+
+✔ Send JWT Authentication headers.
+
+✔ Debug APIs quickly.
+
+✔ Verify status codes.
+
+✔ Save requests into collections.
+
+---
+
+# Installing Postman
+
+Official Website
+
+```
+https://www.postman.com/
+```
+
+After installation,
+
+create a workspace for the project.
+
+---
+
+# Creating a Collection
+
+Collections organize API requests.
+
+Example
+
+```
+BloodLink API
+
+│
+
+├── Authentication
+
+│      ├── Login
+
+│      └── Profile
+
+│
+
+├── Users
+
+├── Donors
+
+├── Donations
+
+├── Inventory
+
+├── Requests
+
+├── Transport
+
+└── Payments
+```
+
+As the project grows,
+
+all APIs remain organized.
+
+---
+
+# Understanding an HTTP Request
+
+Every HTTP request consists of several parts.
+
+```
+Method
+
+URL
+
+Headers
+
+Body
+```
+
+---
+
+Example
+
+```
+POST
+
+http://127.0.0.1:8000/api/authentication/login/
+```
+
+Headers
+
+```
+Content-Type:
+
+application/json
+```
+
+Body
+
+```json
+{
+    "email":"martin@bloodlink.com",
+
+    "password":"456"
+}
+```
+
+---
+
+# Testing Login API
+
+## Endpoint
+
+```
+POST
+
+/api/authentication/login/
+```
+
+---
+
+## Body
+
+```json
+{
+    "email":"martin@bloodlink.com",
+
+    "password":"456"
+}
+```
+
+---
+
+## Expected Response
+
+Status
+
+```
+200 OK
+```
+
+Response
+
+```json
+{
+    "access":"eyJhbGcOiJIUzI1NiIs..."
+}
+```
+
+The JWT is now ready to be used.
+
+---
+
+# Saving the JWT
+
+Copy
+
+```
+access
+```
+
+Example
+
+```
+eyJhbGcOiJIUzI1NiIs...
+```
+
+The client (Flutter)
+
+would normally save this token
+
+inside secure local storage.
+
+During development,
+
+we manually copy it into Postman.
+
+---
+
+# Testing Protected APIs
+
+Example
+
+```
+GET
+
+/api/authentication/profile/
+```
+
+---
+
+# Authorization Header
+
+Headers
+
+```
+Authorization
+
+Bearer eyJhbGcOiJIUzI1NiIs...
+```
+
+Notice
+
+```
+Bearer
+
+(space)
+
+Token
+```
+
+The space is mandatory.
+
+---
+
+# Internal Flow
+
+```
+Postman
+
+│
+
+Authorization Header
+
+│
+
+JWTAuthentication
+
+│
+
+verify_access_token()
+
+│
+
+User.objects.get()
+
+│
+
+request.user
+
+│
+
+APIView
+
+│
+
+Response
+
+│
+
+Postman
+```
+
+---
+
+# Authentication Test Cases
+
+During development,
+
+three important test cases were performed.
+
+---
+
+## Test Case 1
+
+### No Authorization Header
+
+Request
+
+```
+GET
+
+/api/authentication/profile/
+```
+
+Headers
+
+```
+None
+```
+
+Expected Result
+
+```
+403 Forbidden
+```
+
+Meaning
+
+The API correctly rejected anonymous users.
+
+---
+
+## Test Case 2
+
+### Invalid JWT
+
+Headers
+
+```
+Authorization
+
+Bearer 123
+```
+
+Expected Result
+
+```
+403 Forbidden
+```
+
+Response
+
+```json
+{
+    "detail":"Invalid or expired token."
+}
+```
+
+Meaning
+
+Our authentication system correctly rejected an invalid token.
+
+---
+
+## Test Case 3
+
+### Valid JWT
+
+Headers
+
+```
+Authorization
+
+Bearer eyJhbGcOi...
+```
+
+Expected Result
+
+```
+200 OK
+```
+
+Response
+
+```json
+{
+    "user_ID":"USR003",
+
+    "full_name":"Martin",
+
+    "email":"martin@bloodlink.com",
+
+    "role":"Admin",
+
+    "status":"Active"
+}
+```
+
+Meaning
+
+The token was verified successfully,
+
+and
+
+```python
+request.user
+```
+
+was populated correctly.
+
+---
+
+# HTTP Status Codes
+
+| Status | Meaning |
+|---------|----------|
+| 200 OK | Request successful |
+| 201 Created | Resource created |
+| 204 No Content | Resource deleted |
+| 400 Bad Request | Validation failed |
+| 401 Unauthorized | Authentication failed |
+| 403 Forbidden | Access denied |
+| 404 Not Found | Resource not found |
+| 500 Internal Server Error | Server-side bug |
+
+---
+
+# Debugging Journey
+
+While implementing authentication,
+
+several issues were encountered.
+
+---
+
+## Problem 1
+
+Passwords stored as plain text.
+
+Solution
+
+```
+make_password()
+```
+
+---
+
+## Problem 2
+
+Missing
+
+```
+urlpatterns
+```
+
+inside
+
+```
+authentication/urls.py
+```
+
+---
+
+## Problem 3
+
+Typo
+
+Wrong
+
+```python
+user = user.objects.get(...)
+```
+
+Correct
+
+```python
+user = User.objects.get(...)
+```
+
+---
+
+## Problem 4
+
+Mixing
+
+```
+Simple JWT
+```
+
+and
+
+```
+Custom JWT
+```
+
+inside
+
+```
+settings.py
+```
+
+Only one authentication system should be active.
+
+---
+
+# API Testing Workflow
+
+```
+Postman
+
+↓
+
+HTTP Request
+
+↓
+
+URL Routing
+
+↓
+
+APIView
+
+↓
+
+Authentication
+
+↓
+
+Serializer
+
+↓
+
+ORM
+
+↓
+
+PostgreSQL
+
+↓
+
+ORM
+
+↓
+
+Serializer
+
+↓
+
+HTTP Response
+
+↓
+
+Postman
+```
+
+---
+
+# Common Mistakes
+
+### Wrong HTTP Method
+
+Using
+
+```
+GET
+```
+
+instead of
+
+```
+POST
+```
+
+---
+
+### Wrong Endpoint
+
+```
+/login
+```
+
+instead of
+
+```
+/api/authentication/login/
+```
+
+---
+
+### Missing JSON
+
+Forgetting
+
+```
+Content-Type
+
+application/json
+```
+
+---
+
+### Missing Authorization Header
+
+```
+Authorization
+
+Bearer ...
+```
+
+---
+
+### Expired JWT
+
+After expiration,
+
+the user must log in again.
+
+---
+
+### Invalid Bearer Format
+
+Wrong
+
+```
+BearereyJ...
+```
+
+Correct
+
+```
+Bearer eyJ...
+```
+
+Notice the space.
+
+---
+
+# Real BloodLink Testing Flow
+
+```
+Start Django Server
+
+↓
+
+Open Postman
+
+↓
+
+Login
+
+↓
+
+Receive JWT
+
+↓
+
+Copy JWT
+
+↓
+
+Open Protected API
+
+↓
+
+Add Authorization Header
+
+↓
+
+Send Request
+
+↓
+
+Receive Response
+
+↓
+
+Repeat
+```
+
+---
+
+# Chapter Summary
+
+After completing this chapter,
+
+you can
+
+- Install Postman.
+- Create collections.
+- Test APIs independently.
+- Send JSON requests.
+- Send JWT authentication headers.
+- Verify protected APIs.
+- Debug backend APIs.
+- Interpret HTTP status codes.
+- Test authentication using different scenarios.
+
+---
+
+# ✅ What I Learned
+
+- Postman simulates a real frontend client.
+- Every API should be tested before frontend integration.
+- JWTs are sent through the `Authorization` header.
+- Protected APIs can be verified independently.
+- Systematic testing makes backend debugging significantly easier.
+
+---
+
+# 🎉 Backend Progress
+
+```
+Database                  ✅
+
+ORM                       ✅
+
+Models                    ✅
+
+Migrations                ✅
+
+Django Admin              ✅
+
+Serializer                ✅
+
+APIView                   ✅
+
+URL Routing               ✅
+
+CRUD APIs                 ✅
+
+Password Hashing          ✅
+
+Custom JWT Authentication ✅
+
+Postman Testing           ✅
+
+────────────────────────────
+
+Role-Based Access Control ⏳
+
+Auto ID Generation        ⏳
+
+Business Logic            ⏳
+
+Flutter Integration       ⏳
+```
+
+---
+
+# Next Chapter
+
+```
+Chapter 16
+
+Role-Based Access Control (RBAC)
+```
+
+In the next chapter, the authentication system will be extended to control **what each type of user is allowed to do**.
+
+Instead of simply identifying users, BloodLink will enforce permissions based on their roles:
+
+- **SuperAdmin**
+- **Admin**
+- **Staff**
+
+This will complete the **Authorization** phase of the backend.
+
 # 📈 Current Progress
 
 | Chapter | Status |
 |----------|--------|
 | Database | ✅ |
-| ORM | ✅ |
+| ORM (Object Relational Mapper) | ✅ |
 | Models | ✅ |
 | Migrations | ✅ |
 | Django Admin | ✅ |
 | Serializer | ✅ |
 | APIView | ✅ |
 | URL Routing | ✅ |
-| GET API | ✅ |
-| POST API | ✅ |
-| PUT API | ✅ |
-| PATCH API | ✅ |
+| GET API (Read) | ✅ |
+| POST API (Create) | ✅ |
+| PUT API (Full Update) | ✅ |
+| PATCH API (Partial Update) | ✅ |
 | DELETE API | ✅ |
-| Authentication | ⏳ |
-| JWT | ⏳ |
-| RBAC | ⏳ |
+| Password Hashing | ✅ |
+| Custom JWT Authentication | ✅ |
+| API Testing with Postman | ✅ |
+| Role-Based Access Control (RBAC) | ⏳ |
+| Auto ID Generation | ⏳ |
+| Business Logic Implementation | ⏳ |
+| Exception Handling | ⏳ |
+| Custom Permissions | ⏳ |
+| Reports & Analytics APIs | ⏳ |
 | Flutter Integration | ⏳ |
+| Production Deployment | ⏳ |
 
 
 # 📌 Learning Philosophy
