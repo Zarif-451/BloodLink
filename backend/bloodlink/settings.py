@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'payment',
     'requests',
     'transport',
+    'authentication',
 
     'rest_framework',
 ]
@@ -140,12 +141,6 @@ STATIC_URL = 'static/'
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "authentication.authentication.JWTAuthentication",
     ),
-}
-
-
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
