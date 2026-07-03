@@ -1313,7 +1313,567 @@ Update (PUT)     ✅
 Update (PATCH)   ✅
 Delete (DELETE)  ✅
 ```
+# Chapter 13 — Password Hashing
 
+## 🎯 Purpose
+
+Passwords should **never** be stored as plain text inside a database.
+
+Instead, they must be converted into a secure cryptographic hash before being stored.
+
+When a user attempts to log in, Django compares the entered password with the stored hash instead of comparing plain text.
+
+---
+
+# Why is Password Hashing Needed?
+
+Imagine BloodLink stores passwords like this:
+
+| Email | Password |
+|--------|----------|
+| admin@bloodlink.com | admin123 |
+| martin@bloodlink.com | 456 |
+| staff@bloodlink.com | password |
+
+Suppose someone gains access to the PostgreSQL database.
+
+They instantly know everyone's password.
+
+Since many people reuse passwords across different websites, this could compromise:
+
+- Gmail
+- Facebook
+- University Portals
+- Banking Apps
+- Other online services
+
+This is one of the biggest security risks in software development.
+
+---
+
+# What is Hashing?
+
+Hashing converts data into a fixed-length string.
+
+Example
+
+```
+Password
+
+↓
+
+Hash Function
+
+↓
+
+pbkdf2_sha256$1000000$......
+```
+
+Unlike encryption,
+
+hashing **cannot be reversed**.
+
+There is no function like
+
+```python
+unhash_password()
+```
+
+that returns the original password.
+
+Instead, Django hashes the entered password again and compares the hashes.
+
+---
+
+# Plain Text vs Hashed Password
+
+Plain Text
+
+```
+Password
+
+↓
+
+123456
+```
+
+Stored in PostgreSQL
+
+```
+123456
+```
+
+Anyone can read it.
+
+---
+
+Hashed Password
+
+```
+Password
+
+↓
+
+make_password()
+
+↓
+
+pbkdf2_sha256$1000000$...
+```
+
+Stored in PostgreSQL
+
+```
+pbkdf2_sha256$1000000$...
+```
+
+The original password cannot be seen.
+
+---
+
+# Files
+
+```
+users/
+
+├── serializers.py
+├── views.py
+└── models.py
+```
+
+---
+
+# Why Serializer?
+
+Our POST API creates users using
+
+```python
+serializer.save()
+```
+
+Instead of modifying the View every time,
+
+we modify the Serializer.
+
+This guarantees that **every new user** automatically has a hashed password.
+
+---
+
+# Required Import
+
+```python
+from django.contrib.auth.hashers import make_password
+```
+
+---
+
+# Complete Serializer Code
+
+```python
+from rest_framework import serializers
+
+from django.contrib.auth.hashers import make_password
+
+from .models import User
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = User
+
+        fields = "__all__"
+
+
+    def create(self, validated_data):
+
+        validated_data["password"] = make_password(
+
+            validated_data["password"]
+
+        )
+
+        return User.objects.create(
+
+            **validated_data
+
+        )
+
+
+    def update(self, instance, validated_data):
+
+        if "password" in validated_data:
+
+            validated_data["password"] = make_password(
+
+                validated_data["password"]
+
+            )
+
+        return super().update(
+
+            instance,
+
+            validated_data
+
+        )
+```
+
+---
+
+# Understanding create()
+
+Whenever
+
+```python
+serializer.save()
+```
+
+is called for a new object,
+
+Django internally executes
+
+```python
+create()
+```
+
+Our overridden version first hashes the password
+
+before creating the user.
+
+---
+
+Internal Flow
+
+```
+POST Request
+      │
+request.data
+      │
+Serializer
+      │
+create()
+      │
+make_password()
+      │
+Hashed Password
+      │
+User.objects.create()
+      │
+PostgreSQL
+```
+
+---
+
+# Why update()?
+
+Suppose an administrator changes a staff member's password.
+
+Without overriding
+
+```python
+update()
+```
+
+the password would be saved exactly as entered.
+
+Example
+
+```
+123456
+```
+
+instead of
+
+```
+pbkdf2_sha256...
+```
+
+By overriding update(),
+
+every password change is automatically hashed.
+
+---
+
+# Logging In
+
+Hashing alone is not enough.
+
+When a user logs in,
+
+we must verify the entered password.
+
+---
+
+# Required Import
+
+```python
+from django.contrib.auth.hashers import check_password
+```
+
+---
+
+# Login Logic
+
+```python
+if not check_password(
+
+    password,
+
+    user.password
+
+):
+
+    return Response(
+
+        {
+
+            "error":"Invalid email or password"
+
+        },
+
+        status=status.HTTP_401_UNAUTHORIZED
+
+    )
+```
+
+---
+
+# How check_password() Works
+
+Suppose
+
+Database
+
+```
+pbkdf2_sha256$......
+```
+
+User enters
+
+```
+456
+```
+
+Django performs
+
+```
+Entered Password
+
+↓
+
+Hash Again
+
+↓
+
+New Hash
+
+↓
+
+Compare
+
+↓
+
+Match?
+
+↓
+
+True / False
+```
+
+The original password is **never recovered**.
+
+---
+
+# Internal Authentication Flow
+
+```
+Email
+Password
+      │
+Find User
+      │
+check_password()
+      │
+───────────────
+│             │
+False         True
+│             │
+401        Continue Login
+```
+
+---
+
+# Database Example
+
+Before Hashing
+
+| Email | Password |
+|--------|----------|
+| martin@bloodlink.com | 456 |
+
+---
+
+After Hashing
+
+| Email | Password |
+|--------|----------|
+| martin@bloodlink.com | pbkdf2_sha256$1000000$...... |
+
+Notice
+
+The actual password is no longer stored.
+
+---
+
+# Advantages
+
+✔ Passwords cannot be read directly.
+
+✔ Database leaks become much less damaging.
+
+✔ Industry-standard security.
+
+✔ Built into Django.
+
+---
+
+# Common Mistakes
+
+### Saving Plain Text Passwords
+
+Wrong
+
+```python
+serializer.save()
+```
+
+without hashing.
+
+---
+
+### Comparing Passwords Using ==
+
+Wrong
+
+```python
+if password == user.password:
+```
+
+Correct
+
+```python
+check_password(
+
+    password,
+
+    user.password
+
+)
+```
+
+---
+
+### Forgetting update()
+
+Changing passwords later would store plain text again.
+
+---
+
+### Hashing Twice
+
+Wrong
+
+```python
+make_password(
+
+    make_password(password)
+
+)
+```
+
+Never hash an already hashed password.
+
+---
+
+# Real BloodLink Flow
+
+```
+Admin Creates Staff
+
+        │
+
+POST /users/
+
+        │
+
+UserSerializer
+
+        │
+
+create()
+
+        │
+
+make_password()
+
+        │
+
+PostgreSQL
+
+        │
+
+──────────────────────────────
+
+        │
+
+Staff Login
+
+        │
+
+Email
+
+Password
+
+        │
+
+LoginAPIView
+
+        │
+
+check_password()
+
+        │
+
+JWT Generated
+```
+
+---
+
+# Chapter Summary
+
+After this chapter, you understand
+
+- Why passwords must never be stored as plain text.
+- What hashing is.
+- Difference between hashing and encryption.
+- How Django hashes passwords.
+- How `make_password()` works.
+- How `check_password()` works.
+- Why Serializer is the correct place for hashing.
+- Why both `create()` and `update()` are overridden.
+
+---
+
+# ✅ What I Learned
+
+- Passwords should never be stored directly.
+- Django automatically provides secure hashing utilities.
+- `make_password()` hashes passwords before storage.
+- `check_password()` securely verifies passwords.
+- Authentication compares hashes, not plain text.
+- Hashing is one of the most important security practices in backend development.
 ---
 
 # 📈 Current Progress
