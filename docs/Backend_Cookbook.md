@@ -2437,7 +2437,531 @@ JWT Authentication Class
 
 Each component has a different responsibility.
 
-The next sections will implement each of these components step by step.
+# Chapter 14 — JWT Authentication (Part 2)
+
+---
+
+# Login Serializer
+
+## 🎯 Purpose
+
+Before attempting to log in, we must first verify that the client has sent valid data.
+
+The Login Serializer validates the incoming request.
+
+Unlike `UserSerializer`, it does **not** create a database record.
+
+Its only job is to validate:
+
+- Email
+- Password
+
+---
+
+## File
+
+```
+authentication/serializers.py
+```
+
+---
+
+## Code
+
+```python
+from rest_framework import serializers
+
+
+class LoginSerializer(serializers.Serializer):
+
+    email = serializers.EmailField()
+
+    password = serializers.CharField(
+        write_only=True
+    )
+```
+
+---
+
+## Why Serializer Instead of ModelSerializer?
+
+A login request does **not** create a User.
+
+It simply validates incoming data.
+
+Therefore
+
+```python
+serializers.Serializer
+```
+
+is sufficient.
+
+---
+
+## Internal Flow
+
+```
+Client
+
+│
+
+JSON
+
+│
+
+LoginSerializer
+
+│
+
+Valid?
+
+│
+
+───────────────
+
+│             │
+
+No           Yes
+
+│             │
+
+400        Continue Login
+```
+
+---
+
+## Example Request
+
+```json
+{
+    "email":"martin@bloodlink.com",
+
+    "password":"456"
+}
+```
+
+---
+
+## Common Mistakes
+
+Using
+
+```python
+ModelSerializer
+```
+
+instead of
+
+```python
+Serializer
+```
+
+for login.
+
+---
+
+# Login API
+
+## 🎯 Purpose
+
+Receives
+
+```
+Email
+
+Password
+```
+
+Checks
+
+- Email exists?
+- Password correct?
+
+If successful,
+
+returns a JWT.
+
+---
+
+## File
+
+```
+authentication/views.py
+```
+
+---
+
+## Required Imports
+
+```python
+from rest_framework.views import APIView
+
+from rest_framework.response import Response
+
+from rest_framework import status
+
+from django.contrib.auth.hashers import check_password
+
+from users.models import User
+
+from .serializers import LoginSerializer
+
+from .jwt_utils import generate_access_token
+```
+
+---
+
+## Complete LoginAPIView
+
+```python
+class LoginAPIView(APIView):
+
+    def post(self, request):
+
+        serializer = LoginSerializer(
+
+            data=request.data
+
+        )
+
+        if not serializer.is_valid():
+
+            return Response(
+
+                serializer.errors,
+
+                status=status.HTTP_400_BAD_REQUEST
+
+            )
+
+        email = serializer.validated_data["email"]
+
+        password = serializer.validated_data["password"]
+
+
+        try:
+
+            user = User.objects.get(
+
+                email=email
+
+            )
+
+        except User.DoesNotExist:
+
+            return Response(
+
+                {
+
+                    "error":"Invalid email or password"
+
+                },
+
+                status=status.HTTP_401_UNAUTHORIZED
+
+            )
+
+
+        if not check_password(
+
+            password,
+
+            user.password
+
+        ):
+
+            return Response(
+
+                {
+
+                    "error":"Invalid email or password"
+
+                },
+
+                status=status.HTTP_401_UNAUTHORIZED
+
+            )
+
+
+        access_token = generate_access_token(user)
+
+        return Response(
+
+            {
+
+                "access":access_token
+
+            },
+
+            status=status.HTTP_200_OK
+
+        )
+```
+
+---
+
+# Internal Working
+
+Step 1
+
+Receive JSON.
+
+```
+request.data
+```
+
+↓
+
+```json
+{
+    "email":"martin@bloodlink.com",
+
+    "password":"456"
+}
+```
+
+---
+
+Step 2
+
+Validate
+
+```python
+serializer.is_valid()
+```
+
+If invalid
+
+↓
+
+Return
+
+```
+400 Bad Request
+```
+
+---
+
+Step 3
+
+Find User
+
+```python
+User.objects.get(
+
+    email=email
+
+)
+```
+
+Equivalent SQL
+
+```sql
+SELECT *
+
+FROM Users
+
+WHERE email='martin@bloodlink.com';
+```
+
+---
+
+Step 4
+
+Verify Password
+
+```python
+check_password(
+
+    password,
+
+    user.password
+
+)
+```
+
+If incorrect
+
+↓
+
+```
+401 Unauthorized
+```
+
+---
+
+Step 5
+
+Generate JWT
+
+```python
+generate_access_token(
+
+    user
+
+)
+```
+
+Returns
+
+```
+eyJhbGcOi...
+```
+
+---
+
+Step 6
+
+Return Response
+
+```json
+{
+    "access":"eyJhbGcOi..."
+}
+```
+
+---
+
+# Complete Login Flow
+
+```
+Flutter
+
+│
+
+POST Login
+
+│
+
+request.data
+
+│
+
+LoginSerializer
+
+│
+
+serializer.is_valid()
+
+│
+
+User.objects.get()
+
+│
+
+check_password()
+
+│
+
+generate_access_token()
+
+│
+
+JWT
+
+│
+
+HTTP 200 OK
+```
+
+---
+
+# HTTP Status Codes
+
+| Status | Meaning |
+|---------|----------|
+| 200 OK | Login successful |
+| 400 Bad Request | Invalid request body |
+| 401 Unauthorized | Invalid email or password |
+
+---
+
+# Why Return Same Error?
+
+Notice
+
+Wrong email
+
+↓
+
+```
+Invalid email or password
+```
+
+Wrong password
+
+↓
+
+```
+Invalid email or password
+```
+
+Both return exactly the same message.
+
+Why?
+
+If we returned
+
+```
+Email does not exist.
+```
+
+An attacker could discover which email addresses are registered.
+
+Using the same error message prevents user enumeration.
+
+---
+
+# Common Mistakes
+
+Returning
+
+```
+Email not found
+```
+
+instead of
+
+```
+Invalid email or password
+```
+
+---
+
+Comparing passwords using
+
+```python
+==
+```
+
+instead of
+
+```python
+check_password()
+```
+
+---
+
+Returning the User object instead of a JWT.
+
+---
+
+Generating a JWT before verifying the password.
+
+---
+
+# Chapter Summary
+
+After this section you understand
+
+- LoginSerializer
+- LoginAPIView
+- User lookup
+- Password verification
+- JWT generation
+- Proper REST responses
+- Why identical login errors improve security
 
 # 📈 Current Progress
 
