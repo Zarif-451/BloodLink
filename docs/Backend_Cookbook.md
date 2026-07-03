@@ -2963,6 +2963,755 @@ After this section you understand
 - Proper REST responses
 - Why identical login errors improve security
 
+# Chapter 14 — JWT Authentication (Part 3)
+
+---
+
+# JWT Utility
+
+## 🎯 Purpose
+
+The Login API verifies the user's credentials.
+
+After successful verification, the server must generate a JWT that the client can use for future requests.
+
+Instead of writing JWT logic inside the View, we place it inside a utility module.
+
+This keeps the code organized and reusable.
+
+---
+
+# File
+
+```
+authentication/jwt_utils.py
+```
+
+---
+
+# Required Libraries
+
+```python
+import jwt
+
+from datetime import datetime
+from datetime import timedelta
+from django.conf import settings
+```
+
+---
+
+# Why PyJWT?
+
+PyJWT is a Python library used for creating and verifying JSON Web Tokens.
+
+Instead of manually encrypting and signing data,
+
+PyJWT provides secure implementations of the JWT standard.
+
+---
+
+# generate_access_token()
+
+## Complete Code
+
+```python
+def generate_access_token(user):
+
+    payload = {
+
+        "user_ID": user.user_ID,
+
+        "role": user.role,
+
+        "exp": datetime.utcnow() + timedelta(minutes=15)
+
+    }
+
+    token = jwt.encode(
+
+        payload,
+
+        settings.SECRET_KEY,
+
+        algorithm="HS256"
+
+    )
+
+    return token
+```
+
+---
+
+# Understanding the Payload
+
+The payload stores information about the logged-in user.
+
+```python
+payload = {
+
+    "user_ID": user.user_ID,
+
+    "role": user.role,
+
+    "exp": datetime.utcnow() + timedelta(minutes=15)
+
+}
+```
+
+---
+
+## user_ID
+
+Stores
+
+```
+USR003
+```
+
+Later,
+
+our authentication class will use this value to retrieve the correct User from PostgreSQL.
+
+---
+
+## role
+
+Stores
+
+```
+Admin
+```
+
+This will later help implement
+
+Role-Based Access Control (RBAC).
+
+Instead of querying the database repeatedly,
+
+the token already contains the user's role.
+
+---
+
+## exp
+
+```
+Expiration Time
+```
+
+Example
+
+Current Time
+
+```
+10:00 AM
+```
+
+Token Lifetime
+
+```
+15 Minutes
+```
+
+Expires
+
+```
+10:15 AM
+```
+
+After expiration,
+
+the token becomes invalid.
+
+The user must log in again.
+
+---
+
+# Why Expiration?
+
+Imagine a user loses their laptop.
+
+If tokens never expired,
+
+anyone with the token could access BloodLink forever.
+
+Expiration limits the lifetime of stolen tokens.
+
+---
+
+# Creating the JWT
+
+```python
+token = jwt.encode(
+
+    payload,
+
+    settings.SECRET_KEY,
+
+    algorithm="HS256"
+
+)
+```
+
+---
+
+## What Happens Internally?
+
+```
+Payload
+
+↓
+
+SECRET_KEY
+
+↓
+
+HS256
+
+↓
+
+JWT
+```
+
+The SECRET_KEY signs the token.
+
+Anyone modifying the payload will invalidate the signature.
+
+---
+
+# Example Generated JWT
+
+```
+eyJhbGcOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+
+.
+
+eyJ1c2VyX0lEIiOiJVNSMDAzIiwicm9sZSI6IkFkbWluIiwiZXhwIjoxNzgwMDAwMDB9
+
+.
+
+Q9kL0vYw...
+```
+
+Although it looks random,
+
+it contains:
+
+```
+Header
+
+Payload
+
+Signature
+```
+
+---
+
+# verify_access_token()
+
+## Purpose
+
+Generate Access Token
+
+↓
+
+Client Stores Token
+
+↓
+
+Future Request
+
+↓
+
+Verify Token
+
+---
+
+## Complete Code
+
+```python
+def verify_access_token(token):
+
+    try:
+
+        payload = jwt.decode(
+
+            token,
+
+            settings.SECRET_KEY,
+
+            algorithms=["HS256"]
+
+        )
+
+        return payload
+
+    except jwt.ExpiredSignatureError:
+
+        return None
+
+    except jwt.InvalidTokenError:
+
+        return None
+```
+
+---
+
+# Internal Working
+
+```
+JWT
+
+↓
+
+jwt.decode()
+
+↓
+
+Valid?
+
+───────────────
+
+│             │
+
+No           Yes
+
+│             │
+
+None      Payload
+```
+
+---
+
+# Successful Decode
+
+Returns
+
+```python
+{
+
+    "user_ID":"USR003",
+
+    "role":"Admin",
+
+    "exp":1780000000
+
+}
+```
+
+Notice
+
+We no longer have a string.
+
+We now have a Python dictionary.
+
+---
+
+# Expired Token
+
+If
+
+```
+Current Time
+
+>
+
+Expiration Time
+```
+
+PyJWT raises
+
+```python
+jwt.ExpiredSignatureError
+```
+
+We return
+
+```python
+None
+```
+
+The request is rejected.
+
+---
+
+# Invalid Token
+
+Suppose someone sends
+
+```
+Bearer 123
+```
+
+PyJWT raises
+
+```python
+jwt.InvalidTokenError
+```
+
+Again,
+
+we return
+
+```python
+None
+```
+
+---
+
+# Authentication Class
+
+## Purpose
+
+Every protected request sends
+
+```
+Authorization
+
+Bearer <JWT>
+```
+
+The Authentication Class performs four tasks.
+
+```
+Read Header
+
+↓
+
+Extract Token
+
+↓
+
+Verify JWT
+
+↓
+
+Load User
+```
+
+---
+
+# File
+
+```
+authentication/authentication.py
+```
+
+---
+
+# Required Imports
+
+```python
+from rest_framework.authentication import BaseAuthentication
+
+from rest_framework.exceptions import AuthenticationFailed
+
+from users.models import User
+
+from .jwt_utils import verify_access_token
+```
+
+---
+
+# Complete Authentication Class
+
+```python
+class JWTAuthentication(BaseAuthentication):
+
+    def authenticate(self, request):
+
+        auth_header = request.headers.get(
+
+            "Authorization"
+
+        )
+
+        if not auth_header:
+
+            return None
+
+        parts = auth_header.split()
+
+        if len(parts) != 2 or parts[0] != "Bearer":
+
+            raise AuthenticationFailed(
+
+                "Invalid Authorization header."
+
+            )
+
+        token = parts[1]
+
+        payload = verify_access_token(token)
+
+        if payload is None:
+
+            raise AuthenticationFailed(
+
+                "Invalid or expired token."
+
+            )
+
+        try:
+
+            user = User.objects.get(
+
+                user_ID=payload["user_ID"]
+
+            )
+
+        except User.DoesNotExist:
+
+            raise AuthenticationFailed(
+
+                "User not found."
+
+            )
+
+        return (
+
+            user,
+
+            token
+
+        )
+```
+
+---
+
+# Internal Authentication Flow
+
+```
+Request
+
+│
+
+Authorization Header
+
+│
+
+JWTAuthentication
+
+│
+
+Read Header
+
+│
+
+Bearer?
+
+│
+
+Verify Token
+
+│
+
+Payload
+
+│
+
+User.objects.get()
+
+│
+
+request.user
+
+│
+
+APIView
+```
+
+---
+
+# Why Return (user, token)?
+
+DRF expects
+
+```python
+(user, auth)
+```
+
+The framework automatically performs
+
+```python
+request.user = user
+
+request.auth = token
+```
+
+This is why every protected API can simply write
+
+```python
+request.user
+```
+
+without querying the database again.
+
+---
+
+# Profile API
+
+```python
+class ProfileAPIView(APIView):
+
+    authentication_classes = [
+
+        JWTAuthentication
+
+    ]
+
+    def get(self, request):
+
+        return Response({
+
+            "user_ID": request.user.user_ID,
+
+            "full_name": request.user.full_name,
+
+            "email": request.user.email,
+
+            "role": request.user.role,
+
+            "status": request.user.status,
+
+        })
+```
+
+---
+
+# Authentication Flow
+
+```
+POST Login
+
+↓
+
+Email
+
+↓
+
+Password
+
+↓
+
+check_password()
+
+↓
+
+JWT Generated
+
+↓
+
+Flutter Stores JWT
+
+↓
+
+────────────────────────
+
+↓
+
+Future Request
+
+↓
+
+Authorization Header
+
+↓
+
+JWTAuthentication
+
+↓
+
+Verify JWT
+
+↓
+
+User Loaded
+
+↓
+
+request.user
+
+↓
+
+APIView
+```
+
+---
+
+# Common Mistakes We Encountered
+
+### 1. Plain-text Passwords
+
+Wrong
+
+```
+Password = 456
+```
+
+Correct
+
+```
+pbkdf2_sha256...
+```
+
+---
+
+### 2. Missing urlpatterns
+
+Authentication URLs were not registered.
+
+---
+
+### 3. Typo
+
+Wrong
+
+```python
+user = user.objects.get(...)
+```
+
+Correct
+
+```python
+user = User.objects.get(...)
+```
+
+---
+
+### 4. Mixing Authentication Systems
+
+We accidentally used
+
+```
+rest_framework_simplejwt.authentication.JWTAuthentication
+```
+
+while also using our own
+
+```
+authentication.authentication.JWTAuthentication
+```
+
+The project should use **one** authentication system consistently.
+
+---
+
+# Chapter Summary
+
+After this chapter you understand
+
+- JWT generation
+- JWT verification
+- JWT payload
+- JWT expiration
+- JWT signature
+- Custom authentication class
+- Authorization header
+- `request.user`
+- Protected APIs
+- How Django REST Framework authenticates requests internally
+
 # 📈 Current Progress
 
 | Chapter | Status |
