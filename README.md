@@ -11,16 +11,20 @@ The project follows a **Database-First Development Approach**, where the Postgre
 - 👤 User Management (SuperAdmin, Admin, Staff)
 - 🔐 Password Hashing
 - 🔑 Custom JWT Authentication
+- 🛡️ Role-Based Access Control (RBAC)
+- 🔒 Custom Permission Classes
+- ⚡ Generic Views (DRF)
 - 🩸 Donor Management
 - 💉 Blood Donation Tracking
+- 🧪 Screening Management
 - 🏥 Blood Request Management
 - 👥 Requester Management
 - 🏢 Branch Management
 - 📦 Blood Inventory Management
+- 📋 Blood Allocation Management
 - 🚚 Transportation Tracking
 - 💰 Payment Management
-- 📊 Report Generation
-- 🔒 Role-Based Access Control (RBAC) *(In Progress)*
+- 📊 Report Management
 
 ---
 
@@ -62,7 +66,7 @@ BloodLink/
 │   ├── inventory/
 │   ├── branches/
 │   ├── transport/
-│   ├── payment/
+│   ├── payments/
 │   └── manage.py
 │
 ├── database/
@@ -126,6 +130,7 @@ BloodLink/
 - Django REST Framework Setup
 - Serializer Implementation
 - APIView Implementation
+- Generic Views
 - URL Routing
 
 ### CRUD REST APIs
@@ -135,7 +140,12 @@ BloodLink/
 - ✅ Requests
 - ✅ Branches
 - ✅ Blood Inventory
+- ✅ Allocations
 - ✅ Donations
+- ✅ Screenings
+- ✅ Transport
+- ✅ Payments
+- ✅ Reports
 
 ### Security & Authentication
 - ✅ Password Hashing (`make_password`, `check_password`)
@@ -143,26 +153,31 @@ BloodLink/
 - ✅ Login API
 - ✅ Profile API
 - ✅ Protected Endpoints
-- ✅ Postman API Testing
+- ✅ API Testing with Postman
+
+### Authorization
+- ✅ Role-Based Access Control (RBAC)
+- ✅ Custom Permission Classes
 
 ---
 
 ## 🚧 In Progress
 
-- Role-Based Access Control (RBAC)
+- Auto ID Generation (`USR001`, `DON001`, `PAY001`, ...)
 - Business Logic Implementation
-- Auto ID Generation (USR001, DON001, ...)
+- User Phone CRUD
+- Donor Phone CRUD
+- Branch Phone CRUD
+- Requester Phone CRUD
+- Exception Handling
 
 ---
 
 ## 📅 Planned
 
-- Screening Workflow
-- Blood Allocation Workflow
-- Transportation Workflow
-- Payment Workflow
+- Complete API Testing
 - Flutter Backend Integration
-- Deployment
+- Production Deployment
 
 ---
 
@@ -215,7 +230,7 @@ python manage.py runserver
 
 ---
 
-# 🔐 Authentication Workflow
+# 🔐 Authentication & Authorization Workflow
 
 ```text
 Login
@@ -238,7 +253,13 @@ JWTAuthentication
   │
 request.user
   │
-APIView
+Permission Class (RBAC)
+  │
+Permission Granted?
+ ┌──────────────┐
+ │ Yes      No  │
+ ▼          ▼
+APIView   403 Forbidden
 ```
 
 ---
@@ -266,6 +287,10 @@ Custom JWT Authentication
  ↓
 Role-Based Access Control
  ↓
+Custom Permission Classes
+ ↓
+Generic Views
+ ↓
 Business Logic
  ↓
 Flutter Frontend
@@ -283,22 +308,34 @@ Flutter Frontend
 | Database Migrations | ✅ Completed |
 | Django Admin | ✅ Completed |
 | Django REST Framework Setup | ✅ Completed |
+| Serializer Implementation | ✅ Completed |
+| APIView Implementation | ✅ Completed |
+| Generic Views | ✅ Completed |
 | User CRUD API | ✅ Completed |
 | Donor CRUD API | ✅ Completed |
 | Requester CRUD API | ✅ Completed |
 | Request CRUD API | ✅ Completed |
 | Branch CRUD API | ✅ Completed |
 | Blood Inventory CRUD API | ✅ Completed |
+| Allocation CRUD API | ✅ Completed |
 | Donation CRUD API | ✅ Completed |
+| Screening CRUD API | ✅ Completed |
+| Transport CRUD API | ✅ Completed |
+| Payment CRUD API | ✅ Completed |
+| Report CRUD API | ✅ Completed |
 | Password Hashing | ✅ Completed |
 | Custom JWT Authentication | ✅ Completed |
 | Protected APIs | ✅ Completed |
 | API Testing (Postman) | ✅ Completed |
-| Role-Based Access Control | 🚧 In Progress |
+| Role-Based Access Control (RBAC) | ✅ Completed |
+| Custom Permission Classes | ✅ Completed |
+| Generic Views | ✅ Completed |
 | Auto ID Generation | 🚧 In Progress |
 | Business Logic | 🚧 In Progress |
+| Exception Handling | 🚧 In Progress |
+| Phone CRUD APIs | 🚧 In Progress |
 | Flutter Integration | ⏳ Planned |
-| Deployment | ⏳ Planned |
+| Production Deployment | ⏳ Planned |
 
 ---
 
@@ -321,11 +358,14 @@ The **Backend Cookbook** documents:
 - Django Admin
 - Serializers
 - APIViews
+- Generic Views
 - URL Routing
 - CRUD Operations
 - Password Hashing
 - Custom JWT Authentication
 - API Testing with Postman
+- Role-Based Access Control (RBAC)
+- Custom Permission Classes
 - Learning Notes & Best Practices
 
 ---
@@ -336,7 +376,7 @@ The **Backend Cookbook** documents:
 
 CSE Undergraduate, CUET
 
-Python • Django • Machine Learning • Cybersecurity
+**Python • Django • Machine Learning • Cybersecurity**
 
 ---
 
