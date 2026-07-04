@@ -4499,6 +4499,205 @@ Instead of simply identifying users, BloodLink will enforce permissions based on
 
 This will complete the **Authorization** phase of the backend.
 
+# Chapter 16 — Role-Based Access Control (RBAC)
+
+## 🎯 Purpose
+
+Authentication answers:
+
+> **Who are you?**
+
+Authorization answers:
+
+> **What are you allowed to do?**
+
+After a user logs in successfully, BloodLink must determine which operations that user is permitted to perform.
+
+This is achieved using **Role-Based Access Control (RBAC).**
+
+---
+
+# Why RBAC?
+
+Imagine every authenticated user could:
+
+- Delete branches
+- Promote themselves to SuperAdmin
+- Approve payments
+- Generate nationwide reports
+
+Authentication alone cannot prevent this.
+
+RBAC restricts actions according to the user's role.
+
+---
+
+# BloodLink Roles
+
+```
+SuperAdmin
+        │
+        ├── Full System Access
+        │
+Admin
+        │
+        ├── Own Branch Management
+        │
+Staff
+        │
+        └── Daily Operations
+```
+
+---
+
+# Responsibilities
+
+## SuperAdmin
+
+- Manage branches
+- Manage admins
+- Manage staff
+- Manage all operations
+- Generate reports
+- View nationwide reports
+
+---
+
+## Admin
+
+- Manage own branch
+- Manage staff
+- Manage donors
+- Manage donations
+- Manage inventory
+- Manage requests
+- Manage transport
+- Manage payments
+- Generate reports
+
+---
+
+## Staff
+
+- Register donors
+- Record donations
+- Record screenings
+- Update inventory
+- Review requests
+- Approve or reject requests
+- Record transport
+- Record payments
+
+Staff cannot manage:
+
+- Branches
+- Admins
+- User roles
+- Reports
+
+---
+
+# Authentication vs Authorization
+
+```
+JWT Authentication
+
+↓
+
+request.user
+
+↓
+
+RBAC
+
+↓
+
+Permission Granted?
+
+↓
+
+APIView
+```
+
+Authentication identifies the user.
+
+RBAC decides whether that user may continue.
+
+---
+
+# Files
+
+```
+users/
+
+├── permissions.py
+```
+
+---
+
+# Internal Flow
+
+```
+HTTP Request
+
+↓
+
+JWT Authentication
+
+↓
+
+request.user
+
+↓
+
+Permission Class
+
+↓
+
+Allowed?
+
+───────────────
+
+│             │
+
+No           Yes
+
+│             │
+
+403        APIView
+```
+
+---
+
+# Advantages
+
+✔ Centralized permission logic
+
+✔ Easy to maintain
+
+✔ Reusable across every app
+
+✔ Prevents unauthorized operations
+
+---
+
+# Common Mistakes
+
+- Mixing authentication with authorization.
+- Writing role checks inside every API.
+- Forgetting to protect sensitive APIs.
+
+---
+
+# Chapter Summary
+
+After this chapter you understand:
+
+- Authentication vs Authorization
+- RBAC
+- User roles
+- Permission checking
+
 # 📈 Current Progress
 
 | Chapter | Status |
@@ -4519,12 +4718,12 @@ This will complete the **Authorization** phase of the backend.
 | Password Hashing | ✅ |
 | Custom JWT Authentication | ✅ |
 | API Testing with Postman | ✅ |
-| Role-Based Access Control (RBAC) | ⏳ |
+| Role-Based Access Control (RBAC) | ✅ |
+| Custom Permissions | ✅ |
+| Generic Views | ✅ |
 | Auto ID Generation | ⏳ |
 | Business Logic Implementation | ⏳ |
 | Exception Handling | ⏳ |
-| Custom Permissions | ⏳ |
-| Reports & Analytics APIs | ⏳ |
 | Flutter Integration | ⏳ |
 | Production Deployment | ⏳ |
 
