@@ -4698,6 +4698,343 @@ After this chapter you understand:
 - User roles
 - Permission checking
 
+# Chapter 17 — Custom Permission Classes
+
+## 🎯 Purpose
+
+Instead of checking user roles inside every API View, Django REST Framework allows reusable permission classes.
+
+Each permission class represents one business capability.
+
+---
+
+# File
+
+```
+users/permissions.py
+```
+
+---
+
+# Example
+
+```python
+from rest_framework.permissions import BasePermission
+
+
+class CanManageInventory(BasePermission):
+
+    def has_permission(self, request, view):
+
+        return request.user.role in [
+
+            "SuperAdmin",
+
+            "Admin",
+
+            "Staff"
+
+        ]
+```
+
+---
+
+# Permission Flow
+
+```
+Request
+
+↓
+
+JWT Authentication
+
+↓
+
+request.user
+
+↓
+
+Permission Class
+
+↓
+
+True?
+
+───────────────
+
+│             │
+
+False        True
+
+│             │
+
+403        Continue
+```
+
+---
+
+# Using Permissions
+
+```python
+class InventoryListAPIView(
+
+    generics.ListCreateAPIView
+
+):
+
+    permission_classes = [
+
+        CanManageInventory
+
+    ]
+```
+
+---
+
+# Permission Classes Created
+
+```text
+IsSuperAdmin
+
+CanManageBranches
+
+CanManageAdmins
+
+CanManageStaff
+
+CanManageDonors
+
+CanManageDonations
+
+CanManageScreenings
+
+CanManageInventory
+
+CanManageBloodRequests
+
+CanManageTransport
+
+CanManagePayments
+
+CanGenerateReports
+
+CanViewNationwideReports
+```
+
+---
+
+# Why Separate Classes?
+
+Instead of
+
+```python
+if request.user.role == "Admin":
+```
+
+inside every API,
+
+we write reusable permission classes once.
+
+Every module simply imports them.
+
+---
+
+# Advantages
+
+✔ Cleaner code
+
+✔ Easy to reuse
+
+✔ Easy to modify
+
+✔ Business rules remain centralized
+
+---
+
+# Common Mistakes
+
+- Writing role checks inside views.
+- Forgetting to assign `permission_classes`.
+- Creating duplicate permission classes.
+
+---
+
+# Chapter Summary
+
+After this chapter you understand:
+
+- `BasePermission`
+- `has_permission()`
+- `permission_classes`
+- Reusable authorization
+
+# Chapter 18 — Generic Views
+
+## 🎯 Purpose
+
+APIView gives complete control but often requires writing repetitive CRUD code.
+
+Generic Views eliminate this boilerplate.
+
+---
+
+# Why Generic Views?
+
+Instead of manually writing
+
+- GET
+- POST
+- PUT
+- PATCH
+- DELETE
+
+for every model,
+
+DRF already provides them.
+
+---
+
+# Common Generic Views
+
+```python
+ListCreateAPIView
+
+RetrieveUpdateDestroyAPIView
+```
+
+---
+
+# Example
+
+```python
+class PaymentListAPIView(
+
+    generics.ListCreateAPIView
+
+):
+
+    permission_classes = [
+
+        CanManagePayments
+
+    ]
+
+    queryset = Payment.objects.all()
+
+    serializer_class = PaymentSerializer
+```
+
+---
+
+```python
+class PaymentRetrieveUpdateDestroyAPIView(
+
+    generics.RetrieveUpdateDestroyAPIView
+
+):
+
+    permission_classes = [
+
+        CanManagePayments
+
+    ]
+
+    queryset = Payment.objects.all()
+
+    serializer_class = PaymentSerializer
+
+    lookup_field = "payment_ID"
+
+    lookup_url_kwarg = "payment_ID"
+```
+
+---
+
+# Internal Flow
+
+```
+HTTP Request
+
+↓
+
+Generic View
+
+↓
+
+Serializer
+
+↓
+
+ORM
+
+↓
+
+PostgreSQL
+
+↓
+
+Response
+```
+
+---
+
+# Why lookup_field?
+
+Our project uses custom primary keys.
+
+Example
+
+```
+payment_ID
+
+transport_ID
+
+inventory_ID
+
+allocation_ID
+```
+
+Therefore we specify
+
+```python
+lookup_field = "payment_ID"
+```
+
+instead of Django's default `pk`.
+
+---
+
+# Advantages
+
+✔ Less code
+
+✔ Easier maintenance
+
+✔ Cleaner CRUD
+
+✔ Consistent APIs
+
+---
+
+# Common Mistakes
+
+- Forgetting `queryset`
+- Forgetting `serializer_class`
+- Forgetting `lookup_field`
+- Forgetting `permission_classes`
+
+---
+
+# Chapter Summary
+
+After this chapter you understand:
+
+- Generic Views
+- ListCreateAPIView
+- RetrieveUpdateDestroyAPIView
+- lookup_field
+- lookup_url_kwarg
+
 # 📈 Current Progress
 
 | Chapter | Status |
