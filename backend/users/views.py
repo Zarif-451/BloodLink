@@ -2,11 +2,11 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import User
-from .serializers import UserSerializer
+from .models import User, Report
+from .serializers import UserSerializer, ReportSerializer
 
-from rest_framework import status
-
+from rest_framework import status, generics
+from .permissions import CanGenerateReports, CanViewNationwideReports
 
 class UserListAPIView(APIView):
 
@@ -121,3 +121,44 @@ class UserDetailAPIView(APIView):
         return Response(
             status=status.HTTP_204_NO_CONTENT
         )
+    
+
+class ReportListAPIView(
+    generics.ListCreateAPIView
+):
+
+    permission_classes = [
+        CanGenerateReports
+    ]
+
+    queryset = Report.objects.all()
+
+    serializer_class = ReportSerializer
+
+
+class ReportRetrieveUpdateDestroyAPIView(
+    generics.RetrieveUpdateDestroyAPIView
+):
+
+    permission_classes = [
+        CanGenerateReports
+    ]
+
+    queryset = Report.objects.all()
+
+    serializer_class = ReportSerializer
+
+    lookup_field = "report_ID"
+
+    lookup_url_kwarg = "report_ID"
+
+
+class NationwideReportAPIView(generics.ListAPIView):
+
+    permission_classes = [
+        CanViewNationwideReports
+    ]
+
+    serializer_class = ReportSerializer
+
+    queryset = Report.objects.all()

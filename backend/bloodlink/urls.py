@@ -28,6 +28,8 @@ urlpatterns = [
     path("api/branches/", include("branches.urls")),
     path("api/inventory/", include("inventory.urls")),
     path("api/donations/", include("donations.urls")),
+    path("api/transport/", include("transport.urls")),
+    path("api/payment/", include("payment.urls")),
 
 
     path(

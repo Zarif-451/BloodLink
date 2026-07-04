@@ -45,6 +45,15 @@ class BloodInventory(models.Model):
         related_name="inventories"
     )
 
+    allocation = models.ForeignKey(
+        "inventory.Allocation",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_column="allocation_ID",
+        related_name="blood_units"
+    )
+
     class Meta:
         db_table = "Blood_Inventory"
 

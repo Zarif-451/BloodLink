@@ -9,7 +9,13 @@ from rest_framework import status
 from .models import Request
 from .serializers import RequestSerializer
 
+from users.permissions import CanManageBloodRequests
+
 class RequesterListAPIView(APIView):
+
+    permission_classes = [
+        CanManageBloodRequests
+    ]
 
     def get(self, request):
 
@@ -46,6 +52,10 @@ class RequesterListAPIView(APIView):
 
 class RequesterDetailAPIView(APIView):
 
+    permission_classes = [
+        CanManageBloodRequests
+    ]
+    
     def get(self, request, requester_ID):
 
         requester = get_object_or_404(

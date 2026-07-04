@@ -4,8 +4,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Branch
 from .serializers import BranchSerializer
+from users.permissions import CanManageBranches
 
 class BranchListAPIView(APIView):
+
+    permission_classes = [
+        CanManageBranches
+    ]
 
     def get(self, request):
 
@@ -42,6 +47,10 @@ class BranchListAPIView(APIView):
 
 class BranchDetailAPIView(APIView):
 
+    permission_classes = [
+        CanManageBranches
+    ]
+    
     def get(self, request, branch_ID):
 
         branch = get_object_or_404(

@@ -7,8 +7,13 @@ from .serializers import DonorSerializer
 
 from rest_framework import status
 
+from users.permissions import CanManageDonors
 
 class DonorListAPIView(APIView):
+
+    permission_classes = [
+        CanManageDonors
+    ]
 
     def get(self, request):
 
@@ -40,6 +45,10 @@ class DonorListAPIView(APIView):
 
 class DonorDetailAPIView(APIView):
 
+    permission_classes = [
+        CanManageDonors
+    ]
+    
     def get(self, request, national_ID):
 
         donor = get_object_or_404(

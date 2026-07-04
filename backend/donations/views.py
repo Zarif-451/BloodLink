@@ -4,10 +4,18 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .models import Donation
-from .serializers import DonationSerializer
+from .serializers import DonationSerializer, ScreeningSerializer
+
+from .models import Screening
+from rest_framework import generics
+from users.permissions import CanManageDonations, CanManageScreenings
 
 
 class DonationListAPIView(APIView):
+
+    permission_classes = [
+        CanManageDonations
+    ]
 
     def get(self, request):
 
@@ -43,6 +51,10 @@ class DonationListAPIView(APIView):
 
 
 class DonationDetailAPIView(APIView):
+
+    permission_classes = [
+        CanManageDonations
+    ]
 
     def get(self, request, donation_ID):
 
@@ -123,3 +135,30 @@ class DonationDetailAPIView(APIView):
         return Response(
             status=status.HTTP_204_NO_CONTENT
         )
+    
+
+class ScreeningListAPIView(
+    generics.ListCreateAPIView
+):
+    permission_classes = [
+        CanManageScreenings
+    ]
+
+    queryset = Screening.objects.all()
+
+    serializer_class = ScreeningSerializer
+    
+
+class ScreeningRetrieveUpdateDestroyAPIView(
+    generics.RetrieveUpdateDestroyAPIView
+):
+    permission_classes = [
+        CanManageScreenings
+    ]
+    
+    queryset = Screening.objects.all()
+
+    serializer_class = ScreeningSerializer
+
+    lookup_field = "screening_result_ID"
+    lookup_url_kwarg = "screening_result_ID"

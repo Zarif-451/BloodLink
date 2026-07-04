@@ -3,12 +3,18 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import BloodInventory
-from .serializers import BloodInventorySerializer
+from .models import BloodInventory, Allocation
+from .serializers import BloodInventorySerializer, AllocationSerializer
+from rest_framework import generics
 
+from users.permissions import CanManageInventory
 
 class BloodInventoryListAPIView(APIView):
 
+    permission_classes = [
+    CanManageInventory
+]
+    
     def get(self, request):
 
         inventories = BloodInventory.objects.all()
@@ -43,6 +49,10 @@ class BloodInventoryListAPIView(APIView):
 
 
 class BloodInventoryDetailAPIView(APIView):
+
+    permission_classes = [
+    CanManageInventory
+]
 
     def get(self, request, inventory_ID):
 
@@ -123,3 +133,32 @@ class BloodInventoryDetailAPIView(APIView):
         return Response(
             status=status.HTTP_204_NO_CONTENT
         )
+    
+
+class AllocationListAPIView(
+    generics.ListCreateAPIView
+):
+    
+    permission_classes = [
+        CanManageInventory
+    ]
+
+    queryset = Allocation.objects.all()
+
+    serializer_class = AllocationSerializer
+
+
+class AllocationRetrieveUpdateDestroyAPIView(
+    generics.RetrieveUpdateDestroyAPIView
+):
+    
+    permission_classes = [
+        CanManageInventory
+    ]
+
+    queryset = Allocation.objects.all()
+
+    serializer_class = AllocationSerializer
+
+    lookup_field = "allocation_ID"
+    lookup_url_kwarg = "allocation_ID"
