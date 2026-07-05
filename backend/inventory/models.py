@@ -45,6 +45,15 @@ class BloodInventory(models.Model):
         related_name="inventories"
     )
 
+    request = models.ForeignKey(
+    "requests.Request",
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,
+    db_column="request_ID",
+    related_name="blood_units"
+)
+
     allocation = models.ForeignKey(
         "inventory.Allocation",
         on_delete=models.SET_NULL,
