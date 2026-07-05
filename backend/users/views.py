@@ -2,11 +2,11 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import User, Report
-from .serializers import UserSerializer, ReportSerializer
+from .models import User, Report, UserPhone
+from .serializers import UserSerializer, ReportSerializer, UserPhoneSerializer
 
 from rest_framework import status, generics
-from .permissions import CanGenerateReports, CanViewNationwideReports
+from .permissions import CanGenerateReports, CanViewNationwideReports, CanManageStaff
 
 class UserListAPIView(APIView):
 
@@ -162,3 +162,85 @@ class NationwideReportAPIView(generics.ListAPIView):
     serializer_class = ReportSerializer
 
     queryset = Report.objects.all()
+
+
+
+class UserPhoneAPIView(APIView):
+
+    permission_classes = [
+        CanManageStaff
+    ]
+
+    def get(self, request, user_ID):
+
+        user = get_object_or_404(
+            User,
+            user_ID=user_ID
+        )
+
+        phones = UserPhone.objects.filter(
+            user=user
+        )
+
+        serializer = UserPhoneSerializer(
+            phones,
+            many=True
+        )
+
+        return response(serializer.data)
+    
+    def post(self, request, user_ID):
+
+        user = get_object_or_404(
+            User,
+            user_ID=user_ID
+        )
+
+        data = request.data.copy()
+
+        data["user"] = user.user_ID
+
+        serializer = UserPhoneSerializer(
+            data=data
+        )
+
+        if serializer.is_valid():
+
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+        
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+class UserPhoneDetailAPIView(APIView):
+
+    permission_classes = [
+        CanManageStaff
+    ]
+
+    def get_object(self, user_ID, phone):
+
+        return get_object_or_404(
+            UserPhone,
+            user_user_ID=user_ID
+
+            phone=phone
+        )
+    
+    def get(self, request, user_ID, phone):
+
+        user_phone = self.get_object(
+            user_ID, phone
+        )
+
+        serializer = UserPhoneSerializer(
+            user_phone
+        )
+
+        return Response(serializer.data)

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 
-from .models import User, Report
+from .models import User, Report, UserPhone
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -37,4 +37,11 @@ class ReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Report
+        fields = "__all__"
+
+
+class UserPhoneSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserPhone
         fields = "__all__"
