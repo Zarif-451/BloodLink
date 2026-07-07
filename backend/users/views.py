@@ -228,8 +228,7 @@ class UserPhoneDetailAPIView(APIView):
 
         return get_object_or_404(
             UserPhone,
-            user_user_ID=user_ID
-
+            user_user_ID=user_ID,
             phone=phone
         )
     
@@ -244,3 +243,46 @@ class UserPhoneDetailAPIView(APIView):
         )
 
         return Response(serializer.data)
+    
+
+    def patch(self, request, user_ID, phone):
+
+        user_phone = self.get_object(
+            user_ID, phone
+        )
+
+        serializer = UserPhoneSerializer(
+            instance = user_phone,
+
+            data = request.data,
+
+            partial=True
+        )
+
+        if serializer.is_valid():
+
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        
+        )
+    
+    
+    def delete(self, request, user_ID, phone):
+
+        user_phone = self.get_object(
+            user_ID, phone
+        )
+
+        user_phone.delete()
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT
+        )

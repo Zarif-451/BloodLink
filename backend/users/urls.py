@@ -2,7 +2,7 @@ from django.urls import path
 from .views import UserListAPIView, UserDetailAPIView
 from .views import ReportListAPIView, ReportRetrieveUpdateDestroyAPIView
 from .views import NationwideReportAPIView
-
+from .views import UserPhoneAPIView, UserPhoneDetailAPIView
 urlpatterns = [
 
     path("", UserListAPIView.as_view(), name="user-list"),
@@ -29,5 +29,17 @@ urlpatterns = [
     "reports/nationwide/",
     NationwideReportAPIView.as_view(),
     name="nationwide-report"
-),
+    ),
+
+    path(
+        "<str:user_ID>/phones/",
+        UserPhoneAPIView.as_view(),
+        name="user-phone-list"
+    ),
+
+    path(
+        "<str:user_ID>/phones/<str:phone>/",
+        UserPhoneDetailAPIView.as_view(),
+        name="user-phone-detail"
+    ),
 ]
