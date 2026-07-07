@@ -6,8 +6,8 @@ from .models import Requester
 from .serializers import RequesterSerializer
 from rest_framework import status
 
-from .models import Request
-from .serializers import RequestSerializer
+from .models import Request, RequesterPhone
+from .serializers import RequestSerializer, RequesterPhoneSerializer
 
 from users.permissions import CanManageBloodRequests
 
@@ -249,6 +249,137 @@ class RequestDetailAPIView(APIView):
         )
 
         blood_request.delete()
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT
+        )
+    
+
+class RequesterPhoneListAPIView(APIView):
+
+    permission_classes = [
+        CanManageBloodRequests
+    ]
+
+
+    def get(self, request, requester_ID):
+
+        requester = get_object_or_404(
+            Requester,
+            requester_ID=requester_ID
+        )
+
+        phones = RequesterPhone.objects.filter(
+            requester=requester
+        )
+
+        serializer = RequesterPhoneSerializer(
+            phones,
+            many=True
+        )
+
+        return Response(serializer.data)
+
+
+    def post(self, request, requester_ID):
+
+        requester = get_object_or_404(
+            Requester,
+            requester_ID=requester_ID
+        )
+
+        data = request.data.copy()
+
+        data["requester"] = requester.requester_ID
+
+        serializer = RequesterPhoneSerializer(
+            data=data
+        )
+
+        if serializer.is_valid():
+
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+
+class RequesterPhoneDetailAPIView(APIView):
+
+    permission_classes = [
+        CanManageBloodRequests
+    ]
+
+
+    def get_object(self, requester_ID, phone):
+
+        return get_object_or_404(
+
+            RequesterPhone,
+
+            requester__requester_ID=requester_ID,
+
+            phone=phone
+        )
+
+
+    def get(self, request, requester_ID, phone):
+
+        requester_phone = self.get_object(
+            requester_ID,
+            phone
+        )
+
+        serializer = RequesterPhoneSerializer(
+            requester_phone
+        )
+
+        return Response(serializer.data)
+
+
+    def patch(self, request, requester_ID,phone):
+
+        requester_phone = self.get_object(
+            requester_ID,
+            phone
+        )
+
+        serializer = RequesterPhoneSerializer(
+
+            instance=requester_phone,
+
+            data=request.data,
+
+            partial=True
+        )
+
+        if serializer.is_valid():
+
+            serializer.save()
+
+            return Response(serializer.data)
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+    def delete(self, request, requester_ID, phone):
+
+        requester_phone = self.get_object(
+            requester_ID,
+            phone
+        )
+
+        requester_phone.delete()
 
         return Response(
             status=status.HTTP_204_NO_CONTENT
