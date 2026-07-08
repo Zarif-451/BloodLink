@@ -207,32 +207,8 @@ class DonorPhoneDetailAPIView(APIView):
         )
 
         return Response(serializer.data)
-    
-    def patch(self, request, national_ID, phone):
 
-        donor_phone = self.get_object(
-            national_ID, phone
-        )
 
-        serializer = DonorPhoneSerializer(
-            instance=donor_phone,
-            data=request.data,
-            partial=True
-        )
-
-        if serializer.is_valid():
-            serializer.save()
-
-            return Response(
-                serializer.data,
-                status = status.HTTP_200_OK
-            )
-        
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
     def delete(self, request, national_ID, phone):
 
         donor_phone = self.get_object(

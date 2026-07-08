@@ -235,39 +235,6 @@ class BranchPhoneDetailAPIView(APIView):
         return Response(serializer.data)
 
 
-    def patch(
-        self,
-        request,
-        branch_ID,
-        phone
-    ):
-
-        branch_phone = self.get_object(
-            branch_ID,
-            phone
-        )
-
-        serializer = BranchPhoneSerializer(
-
-            instance=branch_phone,
-
-            data=request.data,
-
-            partial=True
-        )
-
-        if serializer.is_valid():
-
-            serializer.save()
-
-            return Response(serializer.data)
-
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-
     def delete(
         self,
         request,

@@ -344,34 +344,6 @@ class RequesterPhoneDetailAPIView(APIView):
         return Response(serializer.data)
 
 
-    def patch(self, request, requester_ID,phone):
-
-        requester_phone = self.get_object(
-            requester_ID,
-            phone
-        )
-
-        serializer = RequesterPhoneSerializer(
-
-            instance=requester_phone,
-
-            data=request.data,
-
-            partial=True
-        )
-
-        if serializer.is_valid():
-
-            serializer.save()
-
-            return Response(serializer.data)
-
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-
     def delete(self, request, requester_ID, phone):
 
         requester_phone = self.get_object(

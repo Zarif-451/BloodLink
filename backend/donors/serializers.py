@@ -12,3 +12,4 @@ class DonorPhoneSerializer(serializers.ModelSerializer):
     class Meta:
         model = DonorPhone
         fields = "__all__"
+    
