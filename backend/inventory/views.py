@@ -8,6 +8,7 @@ from .serializers import BloodInventorySerializer, AllocationSerializer
 from rest_framework import generics
 
 from users.permissions import CanManageInventory
+from .business_logic import update_inventory_status
 
 class BloodInventoryListAPIView(APIView):
 
@@ -18,6 +19,9 @@ class BloodInventoryListAPIView(APIView):
     def get(self, request):
 
         inventories = BloodInventory.objects.all()
+
+        for inventory in inventories:
+            update_inventory_status(inventory)
 
         serializer = BloodInventorySerializer(
             inventories,
@@ -60,6 +64,9 @@ class BloodInventoryDetailAPIView(APIView):
             BloodInventory,
             inventory_ID=inventory_ID
         )
+
+        update_inventory_status(inventory)
+
 
         serializer = BloodInventorySerializer(inventory)
 

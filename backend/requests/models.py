@@ -55,9 +55,10 @@ URGENCY_CHOICES = [
     ("Critical", "Critical")
 ]
 
-STATUS_CHOICES = [
+REQUEST_STATUS_CHOICES = [
     ("Pending", "Pending"),
     ("Rejected", "Rejected"),
+    ("Partial", "Partial"),
     ("Fulfilled","Fulfilled")
 ]
 
@@ -83,7 +84,7 @@ class Request(models.Model):
 
     status = models.CharField(
         max_length=15,
-        choices=STATUS_CHOICES,
+        choices=REQUEST_STATUS_CHOICES,
         default="Pending"
     )
 

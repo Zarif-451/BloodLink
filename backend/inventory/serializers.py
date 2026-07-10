@@ -23,11 +23,23 @@ class BloodInventorySerializer(serializers.ModelSerializer):
 
 class AllocationSerializer(serializers.ModelSerializer):
 
+    request_ID = serializers.CharField(write_only=True)
+
     class Meta:
         model = Allocation
-        fields = "__all__"
+        fields = [
+            "allocation_ID",
+            "request_ID",
+            "allocated_quantity",
+            "allocation_date",
+            "allocation_status",
+        ]
+
         read_only_fields = [
-            "allocation_ID"
+            "allocation_ID",
+            "allocated_quantity",
+            "allocation_date",
+            "allocation_status",
         ]
     
     def create(self, validated_data):

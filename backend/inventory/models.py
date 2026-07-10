@@ -12,9 +12,11 @@ BLOOD_GROUP_CHOICES = [
     ("O-", "O-"),
 ]
 
-STATUS_CHOICES = [
+INVENTORY_STATUS_CHOICES = [
     ("Available", "Available"),
-    ("Unavailable", "Unavailable")
+    ("Near Expiry", "Near Expiry"),
+    ("Expired", "Expired"),
+    ("Allocated", "Allocated")
 ]
 
 
@@ -34,7 +36,7 @@ class BloodInventory(models.Model):
 
     status = models.CharField(
         max_length=15,
-        choices=STATUS_CHOICES,
+        choices=INVENTORY_STATUS_CHOICES,
         default="Available"
     )
 
@@ -97,7 +99,9 @@ class Allocation(models.Model):
         "transport.Transport",
         on_delete=models.RESTRICT,
         db_column="transport_ID",
-        related_name="allocations"
+        related_name="allocations",
+        null=True,
+        blank=True
     )
 
     class Meta:
