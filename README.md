@@ -21,17 +21,18 @@ development begins.
 -   🛡️ Role-Based Access Control (RBAC)
 -   🔒 Custom Permission Classes
 -   ⚡ Generic Views (DRF)
+-   🧠 Business Logic Layer
 -   🩸 Donor Management
 -   💉 Blood Donation Tracking
 -   🧪 Screening Management
+-   📦 Automatic Inventory Status Management
 -   🏥 Blood Request Management
 -   👥 Requester Management
--   🏢 Branch Management
--   📦 Blood Inventory Management
--   📋 Blood Allocation Management
+-   📋 FIFO Blood Allocation
 -   🚚 Transportation Tracking
--   💰 Payment Management
--   📊 Report Management
+-   💰 Automatic Payment Generation
+-   ⚙️ Configurable Pricing (settings.py)
+-   📊 Report & Dashboard Module (In Development)
 
 ------------------------------------------------------------------------
 
@@ -75,23 +76,18 @@ BloodLink/
 │   ├── requesters/
 │   ├── requests/
 │   ├── donations/
+│   ├── screenings/
 │   ├── inventory/
 │   ├── branches/
 │   ├── transport/
 │   ├── payments/
+│   ├── reports/
 │   ├── utils/
 │   └── manage.py
 │
 ├── database/
-│   ├── bloodlink_schema.sql
-│   ├── BloodLink_ERD.png
-│   └── BloodLink_Relational_Mapping.pdf
-│
 ├── docs/
-│   └── Backend_Cookbook.md
-│
 ├── frontend/
-│
 └── README.md
 ```
 
@@ -134,18 +130,16 @@ BloodLink/
 
 -   Django Project Setup
 -   Django ↔ PostgreSQL Connection
--   Environment Variable Configuration (.env)
--   Django App Structure
+-   Environment Variables
 -   Django Models
--   Initial Database Migrations
+-   Initial Migrations
 -   Database-First Integration (`migrate --fake-initial`)
 -   Django Admin Configuration
 
 ### Django REST Framework
 
--   Django REST Framework Setup
 -   Serializer Implementation
--   APIView Implementation
+-   APIViews
 -   Generic Views
 -   URL Routing
 
@@ -160,27 +154,36 @@ BloodLink/
 -   ✅ Requests
 -   ✅ Branches
 -   ✅ Branch Phone
--   ✅ Blood Inventory
--   ✅ Allocations
 -   ✅ Donations
 -   ✅ Screenings
+-   ✅ Blood Inventory
+-   ✅ Allocations
 -   ✅ Transport
 -   ✅ Payments
 -   ✅ Reports
 
 ### Security & Authentication
 
--   ✅ Password Hashing (`make_password`, `check_password`)
+-   ✅ Password Hashing
 -   ✅ Custom JWT Authentication
 -   ✅ Login API
 -   ✅ Profile API
--   ✅ Protected Endpoints
+-   ✅ Protected APIs
 -   ✅ API Testing with Postman
 
 ### Authorization
 
 -   ✅ Role-Based Access Control (RBAC)
 -   ✅ Custom Permission Classes
+
+### Business Logic
+
+-   ✅ Business Logic Layer
+-   ✅ Automatic Inventory Status Updates
+-   ✅ FIFO Blood Allocation
+-   ✅ Partial & Fulfilled Requests
+-   ✅ Automatic Payment Generation
+-   ✅ Configurable Pricing
 
 ### Utilities
 
@@ -190,7 +193,7 @@ BloodLink/
 
 ## 🚧 In Progress
 
--   Business Logic Implementation
+-   Reports & Dashboard
 -   Complete API Testing
 -   Exception Handling
 
@@ -198,7 +201,8 @@ BloodLink/
 
 ## 📅 Planned
 
--   Flutter Backend Integration
+-   Flutter Integration
+-   Stripe Integration
 -   Production Deployment
 
 ------------------------------------------------------------------------
@@ -225,9 +229,7 @@ conda activate bloodlink
 pip install -r requirements.txt
 ```
 
-## Create Environment Variables
-
-Create a `.env` file inside the `backend` directory.
+## Configure Environment Variables
 
 ``` env
 DB_NAME=your_database_name
@@ -243,7 +245,7 @@ DB_PORT=5432
 python manage.py migrate --fake-initial
 ```
 
-## Run Development Server
+## Run Server
 
 ``` bash
 cd backend
@@ -256,32 +258,33 @@ python manage.py runserver
 
 ``` text
 Login
-  │
+ │
+ ▼
 Email + Password
-  │
+ │
+ ▼
 check_password()
-  │
+ │
+ ▼
 Generate JWT
-  │
+ │
+ ▼
 Client Stores Token
-  │
-────────────────────────────
-  │
+ │
+ ▼
 Protected API
-  │
-Authorization: Bearer <JWT>
-  │
-JWTAuthentication
-  │
+ │
+ ▼
+JWT Authentication
+ │
+ ▼
 request.user
-  │
-Permission Class (RBAC)
-  │
-Permission Granted?
- ┌──────────────┐
- │ Yes      No  │
- ▼          ▼
-APIView   403 Forbidden
+ │
+ ▼
+RBAC Permission
+ │
+ ├── Granted → APIView
+ └── Denied  → 403 Forbidden
 ```
 
 ------------------------------------------------------------------------
@@ -301,100 +304,103 @@ Database Migrations
  ↓
 Django Admin
  ↓
-REST APIs (CRUD)
+REST APIs
  ↓
 Password Hashing
  ↓
-Custom JWT Authentication
+JWT Authentication
  ↓
-Role-Based Access Control
+RBAC
  ↓
-Custom Permission Classes
+Custom Permissions
  ↓
 Generic Views
  ↓
 Automatic ID Generation
  ↓
-Business Logic
+Business Logic Layer
  ↓
-Flutter Frontend
+Inventory Management Logic
+ ↓
+Blood Allocation System
+ ↓
+Transport & Payment System
+ ↓
+Reports & Dashboard
+ ↓
+Flutter Integration
+ ↓
+Stripe Integration
 ```
 
 ------------------------------------------------------------------------
 
 # 📊 Current Progress
 
-  Component                          Status
-  ---------------------------------- ----------------
-  Database Design                    ✅ Completed
-  PostgreSQL Database                ✅ Completed
-  Django Models                      ✅ Completed
-  Database Migrations                ✅ Completed
-  Django Admin                       ✅ Completed
-  Django REST Framework Setup        ✅ Completed
-  Serializer Implementation          ✅ Completed
-  APIView Implementation             ✅ Completed
-  Generic Views                      ✅ Completed
-  User CRUD API                      ✅ Completed
-  User Phone CRUD API                ✅ Completed
-  Donor CRUD API                     ✅ Completed
-  Donor Phone CRUD API               ✅ Completed
-  Requester CRUD API                 ✅ Completed
-  Requester Phone CRUD API           ✅ Completed
-  Request CRUD API                   ✅ Completed
-  Branch CRUD API                    ✅ Completed
-  Branch Phone CRUD API              ✅ Completed
-  Blood Inventory CRUD API           ✅ Completed
-  Allocation CRUD API                ✅ Completed
-  Donation CRUD API                  ✅ Completed
-  Screening CRUD API                 ✅ Completed
-  Transport CRUD API                 ✅ Completed
-  Payment CRUD API                   ✅ Completed
-  Report CRUD API                    ✅ Completed
-  Password Hashing                   ✅ Completed
-  Custom JWT Authentication          ✅ Completed
-  Protected APIs                     ✅ Completed
-  API Testing (Postman)              🚧 In Progress
-  Role-Based Access Control (RBAC)   ✅ Completed
-  Custom Permission Classes          ✅ Completed
-  Generic Views                      ✅ Completed
-  Automatic ID Generation            ✅ Completed
-  Business Logic                     🚧 In Progress
-  Exception Handling                 🚧 In Progress
-  Flutter Integration                ⏳ Planned
-  Production Deployment              ⏳ Planned
+  Component                    Status
+  ---------------------------- ----------------
+  Database Design              ✅ Completed
+  PostgreSQL Database          ✅ Completed
+  Django Models                ✅ Completed
+  Database Migrations          ✅ Completed
+  Django Admin                 ✅ Completed
+  Django REST Framework        ✅ Completed
+  Serializer                   ✅ Completed
+  APIViews                     ✅ Completed
+  Generic Views                ✅ Completed
+  CRUD REST APIs               ✅ Completed
+  Password Hashing             ✅ Completed
+  Custom JWT Authentication    ✅ Completed
+  Protected APIs               ✅ Completed
+  API Testing (Postman)        🚧 In Progress
+  RBAC                         ✅ Completed
+  Custom Permission Classes    ✅ Completed
+  Automatic ID Generation      ✅ Completed
+  Business Logic Layer         ✅ Completed
+  Inventory Management Logic   ✅ Completed
+  Blood Allocation System      ✅ Completed
+  Transport & Payment System   ✅ Completed
+  Reports & Dashboard          🚧 In Progress
+  Exception Handling           🚧 In Progress
+  Flutter Integration          ⏳ Planned
+  Stripe Integration           ⏳ Planned
+  Production Deployment        ⏳ Planned
 
 ------------------------------------------------------------------------
 
 # 📚 Documentation
 
-Project documentation is maintained in:
+Documentation is available in:
 
 ``` text
 docs/
-└── Backend_Cookbook.md
+├── Backend_Cookbook.md
+├── Chapter_20_Business_Logic_Layer.md
+├── Chapter_21_Inventory_Management_Logic.md
+├── Chapter_22_Blood_Allocation_System.md
+└── Chapter_23_Transport_and_Payment_System.md
 ```
 
-The **Backend Cookbook** documents:
+Topics covered include:
 
--   Backend Architecture
 -   Database-First Development
 -   Django ORM
--   Models
--   Database Migrations
--   Django Admin
+-   Models & Migrations
 -   Serializers
 -   APIViews
 -   Generic Views
--   URL Routing
--   CRUD Operations
+-   CRUD APIs
 -   Password Hashing
+-   JWT Authentication
+-   RBAC
+-   Custom Permissions
 -   Automatic ID Generation
--   Custom JWT Authentication
--   API Testing with Postman
--   Role-Based Access Control (RBAC)
--   Custom Permission Classes
--   Learning Notes & Best Practices
+-   Business Logic Layer
+-   Inventory Management
+-   FIFO Blood Allocation
+-   Transport System
+-   Automatic Payment System
+-   Best Practices & Learning Notes
 
 ------------------------------------------------------------------------
 
