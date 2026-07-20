@@ -6182,35 +6182,348 @@ You learned:
 -   Inventory updates
 -   Automatic payment trigger
 
+# Chapter 23 --- Transport & Payment System
+
+## 🎯 Purpose
+
+After blood has been allocated, BloodLink manages two independent
+processes:
+
+1.  **Transport** -- delivering allocated blood to its destination.
+2.  **Payment** -- charging only for near-expiry blood according to the
+    project's business rules.
+
+Transport handles logistics, while Payment handles financial records.
+
+------------------------------------------------------------------------
+
+# Learning Objectives
+
+After this chapter you will understand:
+
+-   Why Transport is separated from Allocation.
+-   Why Payment is linked to Allocation.
+-   One transport trip carrying multiple allocations.
+-   Automatic payment generation.
+-   Configurable pricing using Django settings.
+
+------------------------------------------------------------------------
+
+# Overall Workflow
+
+``` text
+Blood Request
+      │
+      ▼
+Allocation
+      │
+      ├─────────────┐
+      │             │
+      ▼             ▼
+Transport      Payment (if Near Expiry)
+      │             │
+      ▼             ▼
+Delivered    Pending → Completed / Failed
+```
+
+------------------------------------------------------------------------
+
+# Transport Design
+
+Every `transport_ID` represents **one transport trip**, not a permanent
+road or route.
+
+Example
+
+``` text
+TR001
+
+Branch A
+
+↓
+
+Chittagong Medical College Hospital
+```
+
+Another trip tomorrow receives a different transport_ID.
+
+------------------------------------------------------------------------
+
+# Relationship
+
+``` text
+Transport (1)
+
+↓
+
+Allocation (Many)
+```
+
+One vehicle trip may carry several allocations.
+
+------------------------------------------------------------------------
+
+# Transport Status
+
+``` text
+Pending
+
+↓
+
+In Transit
+
+↓
+
+Delivered
+```
+
+Optional
+
+``` text
+Pending
+
+↓
+
+Cancelled
+```
+
+Cancellation is handled manually by staff. No extra business logic is
+required.
+
+------------------------------------------------------------------------
+
+# Transport Model
+
+``` python
+destination_type
+destination_name
+transport_date
+status
+branch
+```
+
+These fields describe where the trip starts, where it ends and its
+progress.
+
+------------------------------------------------------------------------
+
+# Payment Business Rule
+
+Normal blood
+
+``` text
+Allocation
+
+↓
+
+No Payment
+```
+
+Near Expiry blood
+
+``` text
+Allocation
+
+↓
+
+Create Payment
+```
+
+Payment is created automatically inside the allocation workflow.
+
+------------------------------------------------------------------------
+
+# Why Allocation Creates Payment
+
+Allocation already knows:
+
+-   selected blood bags
+-   allocated quantity
+-   whether any selected bag is Near Expiry
+
+Therefore Allocation is the correct place to trigger payment creation.
+
+------------------------------------------------------------------------
+
+# Payment Workflow
+
+``` text
+Allocation
+
+↓
+
+create_payment()
+
+↓
+
+Pending
+
+↓
+
+Stripe / Staff
+
+↓
+
+Completed
+```
+
+------------------------------------------------------------------------
+
+# Centralized Pricing
+
+Inside `settings.py`
+
+``` python
+NEAR_EXPIRY_BLOOD_PRICE = 500
+```
+
+Business logic
+
+``` python
+from django.conf import settings
+
+PRICE_PER_BAG = settings.NEAR_EXPIRY_BLOOD_PRICE
+```
+
+Benefits
+
+-   One location for pricing.
+-   Easy future updates.
+-   Cleaner business logic.
+
+------------------------------------------------------------------------
+
+# Payment Amount
+
+``` python
+payment_amount = (
+    allocation.allocated_quantity
+    * PRICE_PER_BAG
+)
+```
+
+Example
+
+``` text
+Allocated Quantity = 4
+
+Price Per Bag = 500
+
+Payment = 2000 BDT
+```
+
+------------------------------------------------------------------------
+
+# Why OneToOne?
+
+Payment uses a OneToOne relationship with Allocation because:
+
+-   One allocation generates at most one payment.
+-   Duplicate payments are prevented automatically.
+
+------------------------------------------------------------------------
+
+# Why Payment Method Can Be NULL
+
+When the payment record is created:
+
+``` text
+Status = Pending
+
+Payment Method = NULL
+
+Payment Date = NULL
+```
+
+Later, after payment succeeds:
+
+``` text
+Status = Completed
+
+Payment Method = Card
+
+Payment Date = Today
+```
+
+This supports future Stripe integration.
+
+------------------------------------------------------------------------
+
+# Advantages
+
+-   Clear separation between logistics and finance.
+-   Automatic payment creation.
+-   Configurable pricing.
+-   Prevents duplicate payments.
+-   Ready for Stripe integration.
+
+------------------------------------------------------------------------
+
+# Common Mistakes
+
+-   Treating transport_ID as a permanent route.
+-   Creating payments manually.
+-   Hardcoding prices.
+-   Linking Payment directly to Request instead of Allocation.
+
+------------------------------------------------------------------------
+
+# Best Practices
+
+-   Keep transport and payment independent.
+-   Generate payments automatically.
+-   Store configurable values in `settings.py`.
+-   Use OneToOne for Allocation → Payment.
+
+------------------------------------------------------------------------
+
+# Chapter Summary
+
+You learned:
+
+-   Transport workflow
+-   Trip-based transport design
+-   Allocation → Payment relationship
+-   Automatic payment generation
+-   Centralized pricing
+-   Preparing the backend for Stripe integration
+
 
 # 📈 Current Progress
 
-| Chapter | Status |
-|----------|--------|
-| Database | ✅ |
-| ORM (Object Relational Mapper) | ✅ |
-| Models | ✅ |
-| Migrations | ✅ |
-| Django Admin | ✅ |
-| Serializer | ✅ |
-| APIView | ✅ |
-| URL Routing | ✅ |
-| GET API (Read) | ✅ |
-| POST API (Create) | ✅ |
-| PUT API (Full Update) | ✅ |
-| PATCH API (Partial Update) | ✅ |
-| DELETE API | ✅ |
-| Password Hashing | ✅ |
-| Custom JWT Authentication | ✅ |
-| API Testing with Postman | ✅ |
-| Role-Based Access Control (RBAC) | ✅ |
-| Custom Permissions | ✅ |
-| Generic Views | ✅ |
-| Auto ID Generation | ✅ |
-| Business Logic Implementation | ⏳ |
-| Exception Handling | ⏳ |
-| Flutter Integration | ⏳ |
-| Production Deployment | ⏳ |
+  Chapter                              Status
+  ------------------------------------ --------
+  Database                             ✅
+  ORM (Object Relational Mapper)       ✅
+  Models                               ✅
+  Migrations                           ✅
+  Django Admin                         ✅
+  Serializer                           ✅
+  APIView                              ✅
+  URL Routing                          ✅
+  GET API (Read)                       ✅
+  POST API (Create)                    ✅
+  PUT API (Full Update)                ✅
+  PATCH API (Partial Update)           ✅
+  DELETE API                           ✅
+  Password Hashing                     ✅
+  Custom JWT Authentication            ✅
+  API Testing with Postman             ✅
+  Role-Based Access Control (RBAC)     ✅
+  Custom Permissions                   ✅
+  Generic Views                        ✅
+  Auto ID Generation                   ✅
+  Business Logic Layer                 ✅
+  Inventory Management Logic           ✅
+  Blood Allocation System              ✅
+  Transport & Payment System           ✅
+  Reports & Dashboard                  ⏳
+  Exception Handling                   ⏳
+  Backend Testing (Complete Project)   ⏳
+  Flutter Integration                  ⏳
+  Stripe Integration                   ⏳
+  Production Deployment                ⏳
+
 
 
 # 📌 Learning Philosophy
