@@ -27,11 +27,16 @@ class Payment(models.Model):
         validators=[MinValueValidator(Decimal("0.00"))]
     )
 
-    payment_date = models.DateField()
+    payment_date = models.DateField(
+        null=True,
+        blank=True
+    )
 
     payment_method = models.CharField(
         max_length=20,
-        choices=PAYMENT_METHOD_CHOICES
+        choices=PAYMENT_METHOD_CHOICES,
+        null=True,
+        blank=True
     )
 
     payment_status = models.CharField(
@@ -40,11 +45,11 @@ class Payment(models.Model):
         default="Pending"
     )
 
-    allocation = models.ForeignKey(
+    allocation = models.OneToOneField(
         "inventory.Allocation",
         on_delete=models.RESTRICT,
         db_column="allocation_ID",
-        related_name="payments"
+        related_name="payment"
     )
 
     class Meta:

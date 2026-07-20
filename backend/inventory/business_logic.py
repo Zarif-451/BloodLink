@@ -2,6 +2,7 @@ from datetime import date
 from requests.models import Request
 from .models import BloodInventory, Allocation
 from utils.id_generator import generate_next_ID
+from payment.business_logic import create_payment
 
 def update_inventory_status(inventory):
      """
@@ -14,7 +15,7 @@ def update_inventory_status(inventory):
     - 42+ days   -> Expired
     """
      
-     if inventory_status == "Allocated":
+     if inventory.status == "Allocated":
           return
      
      days_stored = (date.today() - inventory.collection_date).days
@@ -63,6 +64,69 @@ def create_allocation(request_ID):
 
 
     available_blood = BloodInventory.objects.filter(
-         blood_group=Request.blood_group,
+         blood_group=request.blood_group,
          status__in=["Available", "Near Expiry"]
     ).order_by("collection_date")
+
+
+    requested_quantity = request.quantity
+
+    available_quantity = available_blood.count()
+
+
+    if available_quantity == 0:
+         raise ValueError(
+              "No compatible blood bags available."
+          )
+    
+    allocated_quantity = min(
+         requested_quantity,
+         available_quantity
+    )
+
+    selected_blood = available_blood[:allocated_quantity]
+
+    allocation = Allocation.objects.create(
+
+    allocation_ID=generate_next_ID(
+        Allocation,
+        "allocation_ID",
+        "AL"
+    ),
+
+    allocated_quantity=allocated_quantity,
+
+    allocation_date=date.today(),
+
+    allocation_status="Allocated"
+)
+    
+    create_payment(
+         allocation,
+         selected_blood
+    )
+
+    for inventory in selected_blood:
+         
+         inventory.status = "Allocated"
+
+         inventory.request = request
+
+         inventory.allocation = allocation
+
+         inventory.save(
+              update_fields=[
+                   "status",
+                   "request",
+                   "allocation"
+                   ]
+          )
+         
+         if allocated_quantity == requested_quantity:
+              request.status = "Fulfilled"
+
+         else:
+              request.status = "Partial"
+              request.save(
+                   update_fields=["status"]
+                   )

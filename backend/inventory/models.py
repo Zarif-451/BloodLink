@@ -95,6 +95,17 @@ class Allocation(models.Model):
         default="Pending"
     )
 
+    dispatched_time = models.DateTimeField(
+    null=True,
+    blank=True
+    )
+
+    received_time = models.DateTimeField(
+    null=True,
+    blank=True
+    )
+
+    
     transport = models.ForeignKey(
         "transport.Transport",
         on_delete=models.RESTRICT,

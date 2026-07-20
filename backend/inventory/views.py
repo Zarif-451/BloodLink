@@ -9,13 +9,17 @@ from rest_framework import generics
 
 from users.permissions import CanManageInventory
 from .business_logic import update_inventory_status
+from .business_logic import create_allocation
+
+from requests.models import Request
+
 
 class BloodInventoryListAPIView(APIView):
 
     permission_classes = [
-    CanManageInventory
-]
-    
+        CanManageInventory
+    ]
+
     def get(self, request):
 
         inventories = BloodInventory.objects.all()
@@ -55,8 +59,8 @@ class BloodInventoryListAPIView(APIView):
 class BloodInventoryDetailAPIView(APIView):
 
     permission_classes = [
-    CanManageInventory
-]
+        CanManageInventory
+    ]
 
     def get(self, request, inventory_ID):
 
@@ -67,8 +71,9 @@ class BloodInventoryDetailAPIView(APIView):
 
         update_inventory_status(inventory)
 
-
-        serializer = BloodInventorySerializer(inventory)
+        serializer = BloodInventorySerializer(
+            inventory
+        )
 
         return Response(serializer.data)
 
@@ -140,12 +145,12 @@ class BloodInventoryDetailAPIView(APIView):
         return Response(
             status=status.HTTP_204_NO_CONTENT
         )
-    
+
 
 class AllocationListAPIView(
     generics.ListCreateAPIView
 ):
-    
+
     permission_classes = [
         CanManageInventory
     ]
@@ -155,10 +160,50 @@ class AllocationListAPIView(
     serializer_class = AllocationSerializer
 
 
+    def create(self, request, *args, **kwargs):
+
+        request_ID = request.data.get(
+            "request_ID"
+        )
+
+        try:
+
+            allocation = create_allocation(
+                request_ID
+            )
+
+            serializer = AllocationSerializer(
+                allocation
+            )
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        except Request.DoesNotExist:
+
+            return Response(
+                {
+                    "error": "Request not found."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        except ValueError as e:
+
+            return Response(
+                {
+                    "error": str(e)
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
 class AllocationRetrieveUpdateDestroyAPIView(
     generics.RetrieveUpdateDestroyAPIView
 ):
-    
+
     permission_classes = [
         CanManageInventory
     ]

@@ -10,13 +10,3 @@ class PaymentSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "payment_ID"
         ]
-
-    def create(self, validated_data):
-
-        validated_data["payment_ID"] = generate_next_ID(
-            Payment, "payment_ID", "PAY"
-        )
-
-        return Payment.objects.create(
-            **validated_data
-        )

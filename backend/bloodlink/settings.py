@@ -144,3 +144,7 @@ REST_FRAMEWORK = {
         "authentication.authentication.JWTAuthentication",
     ),
 }
+
+
+# Blood price for near expiry blood bags (BDT)
+NEAR_EXPIRY_BLOOD_PRICE = 500

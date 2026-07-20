@@ -7,7 +7,7 @@ from users.permissions import CanManagePayments
 
 
 class PaymentListAPIView(
-    generics.ListCreateAPIView
+    generics.ListAPIView
 ):
 
     permission_classes = [
