@@ -5518,6 +5518,671 @@ After this chapter you understand
 - Why IDs should be read-only
 - How reusable ID generation works across every module
 
+# Chapter 20 --- Business Logic Layer
+
+## 🎯 Purpose
+
+As a Django project grows, placing all application logic inside Views
+makes the code difficult to maintain. BloodLink separates HTTP handling
+from business rules by introducing a dedicated `business_logic.py` file.
+
+------------------------------------------------------------------------
+
+## Why a Business Logic Layer?
+
+Without a Business Logic Layer:
+
+``` text
+APIView
+   ↓
+Validation
+   ↓
+Business Rules
+   ↓
+ORM
+   ↓
+Database
+```
+
+With a Business Logic Layer:
+
+``` text
+APIView
+   ↓
+Business Logic
+   ↓
+ORM
+   ↓
+Database
+```
+
+------------------------------------------------------------------------
+
+## Project Structure
+
+``` text
+inventory/
+├── models.py
+├── serializers.py
+├── views.py
+└── business_logic.py
+
+payments/
+├── models.py
+├── serializers.py
+├── views.py
+└── business_logic.py
+```
+
+------------------------------------------------------------------------
+
+## Responsibilities
+
+### API Views
+
+-   Receive HTTP requests
+-   Check permissions
+-   Call business logic
+-   Return HTTP responses
+
+### Business Logic
+
+-   Inventory status updates
+-   FIFO allocation
+-   Automatic payment creation
+
+### Serializers
+
+-   Validate data
+-   Convert JSON ↔ Python objects
+
+### ORM
+
+-   Read and write PostgreSQL records
+
+------------------------------------------------------------------------
+
+## Example
+
+``` python
+from .business_logic import update_inventory_status
+
+class BloodInventoryListAPIView(APIView):
+
+    def get(self, request):
+
+        inventories = BloodInventory.objects.all()
+
+        for inventory in inventories:
+            update_inventory_status(inventory)
+
+        serializer = BloodInventorySerializer(
+            inventories,
+            many=True
+        )
+
+        return Response(serializer.data)
+```
+
+The View delegates inventory logic to `update_inventory_status()`.
+
+------------------------------------------------------------------------
+
+## Advantages
+
+-   Cleaner Views
+-   Reusable code
+-   Easier testing
+-   Better separation of concerns
+
+------------------------------------------------------------------------
+
+## Common Mistakes
+
+-   Writing business rules inside Views.
+-   Duplicating logic across APIs.
+-   Mixing serializers with business rules.
+
+------------------------------------------------------------------------
+
+## Chapter Summary
+
+You learned:
+
+-   Separation of Concerns
+-   Business Logic Layer
+-   Thin Views
+-   Reusable backend architecture
+
+# Chapter 21 --- Inventory Management Logic
+
+## 🎯 Purpose
+
+The Inventory module is the heart of BloodLink. Every blood bag that
+passes screening is stored as an inventory record. Instead of asking
+staff to manually check expiry dates every day, BloodLink automatically
+determines the current status of every blood bag whenever inventory is
+viewed or used.
+
+------------------------------------------------------------------------
+
+# Learning Objectives
+
+After this chapter you will understand:
+
+-   Why inventory status should be automatic.
+-   How collection dates determine blood usability.
+-   How business logic is separated from Views.
+-   How Django ORM updates records.
+-   Why allocated blood should never become expired automatically.
+
+------------------------------------------------------------------------
+
+# Blood Bag Lifecycle
+
+``` text
+Donor
+   │
+   ▼
+Donation
+   │
+   ▼
+Screening
+   │
+Pass?
+   │
+   ▼
+Staff Adds Inventory
+   │
+   ▼
+Available
+   │
+35 Days
+   ▼
+Near Expiry
+   │
+42 Days
+   ▼
+Expired
+```
+
+Allocated blood remains Allocated until the allocation workflow changes
+it.
+
+------------------------------------------------------------------------
+
+# Why Not Manual Updates?
+
+Without automation, staff would need to inspect every blood bag daily.
+
+Problems:
+
+-   Time consuming
+-   Human error
+-   Expired blood might still appear available
+-   Near-expiry blood may not be prioritized
+
+Automatic updates solve these issues every time inventory is accessed.
+
+------------------------------------------------------------------------
+
+# File Structure
+
+``` text
+inventory/
+├── business_logic.py
+├── models.py
+├── serializers.py
+└── views.py
+```
+
+------------------------------------------------------------------------
+
+# Complete Business Logic
+
+``` python
+from datetime import date
+
+def update_inventory_status(inventory):
+
+    if inventory.status == "Allocated":
+        return
+
+    days_stored = (
+        date.today() - inventory.collection_date
+    ).days
+
+    if days_stored >= 42:
+        new_status = "Expired"
+
+    elif days_stored >= 35:
+        new_status = "Near Expiry"
+
+    else:
+        new_status = "Available"
+
+    if inventory.status != new_status:
+
+        inventory.status = new_status
+
+        inventory.save(
+            update_fields=["status"]
+        )
+```
+
+------------------------------------------------------------------------
+
+# Explanation
+
+## Import
+
+``` python
+from datetime import date
+```
+
+Used to calculate the age of a blood bag.
+
+### Ignore Allocated Blood
+
+``` python
+if inventory.status == "Allocated":
+    return
+```
+
+Allocated blood is already reserved and should not have its status
+overwritten by the expiry checker.
+
+### Calculate Days Stored
+
+``` python
+days_stored = (
+    date.today() - inventory.collection_date
+).days
+```
+
+Example:
+
+``` text
+Collection Date : 2026-07-01
+Today           : 2026-07-20
+
+Days Stored = 19
+```
+
+### Determine Status
+
+-   0--34 days → Available
+-   35--41 days → Near Expiry
+-   42+ days → Expired
+
+### Save Only When Needed
+
+``` python
+if inventory.status != new_status:
+```
+
+This avoids unnecessary UPDATE queries.
+
+------------------------------------------------------------------------
+
+# Calling the Business Logic
+
+``` python
+inventories = BloodInventory.objects.all()
+
+for inventory in inventories:
+    update_inventory_status(inventory)
+```
+
+Every inventory record is refreshed before being returned to the client.
+
+------------------------------------------------------------------------
+
+# Advantages
+
+-   Automatic expiry management
+-   Cleaner Views
+-   Less manual work
+-   Prevents expired blood allocation
+-   Reusable business logic
+
+------------------------------------------------------------------------
+
+# Common Mistakes
+
+-   Updating status inside every View.
+-   Forgetting to ignore Allocated blood.
+-   Saving unchanged records.
+-   Scattering expiry rules throughout the project.
+
+------------------------------------------------------------------------
+
+# Best Practices
+
+-   Keep expiry rules in one function.
+-   Use update_fields for efficient updates.
+-   Reuse the same business logic wherever inventory is accessed.
+
+------------------------------------------------------------------------
+
+# Chapter Summary
+
+You learned:
+
+-   Inventory lifecycle
+-   Automatic inventory status management
+-   Date-based business rules
+-   Separation of concerns
+-   Efficient Django ORM updates
+
+# Chapter 22 --- Blood Allocation System
+
+## 🎯 Purpose
+
+The Blood Allocation module is responsible for assigning compatible
+blood bags from inventory to an approved blood request.
+
+Unlike CRUD operations, allocation is a **business process** involving
+multiple database tables and business rules.
+
+------------------------------------------------------------------------
+
+# Learning Objectives
+
+After this chapter you will understand:
+
+-   FIFO (First In, First Out) allocation
+-   Automatic inventory updates
+-   Request status updates
+-   Partial vs Fulfilled requests
+-   Why allocation belongs inside `business_logic.py`
+
+------------------------------------------------------------------------
+
+# Allocation Workflow
+
+``` text
+Blood Request
+      │
+      ▼
+Validate Request
+      │
+      ▼
+Update Inventory Status
+      │
+      ▼
+Find Compatible Blood
+      │
+      ▼
+FIFO Selection
+      │
+      ▼
+Create Allocation
+      │
+      ▼
+Create Payment (if needed)
+      │
+      ▼
+Update Inventory
+      │
+      ▼
+Update Request Status
+```
+
+------------------------------------------------------------------------
+
+# Business Rules
+
+-   Only **Available** and **Near Expiry** blood can be allocated.
+-   Expired blood is never allocated.
+-   FIFO is used to reduce wastage.
+-   One request contains one blood group.
+-   Partial allocation is allowed.
+
+------------------------------------------------------------------------
+
+# File
+
+``` text
+inventory/
+└── business_logic.py
+```
+
+------------------------------------------------------------------------
+
+# Core ORM Query
+
+``` python
+available_blood = BloodInventory.objects.filter(
+    blood_group=request.blood_group,
+    status__in=["Available", "Near Expiry"]
+).order_by("collection_date")
+```
+
+### Why `status__in`?
+
+``` python
+status__in=["Available", "Near Expiry"]
+```
+
+means:
+
+``` sql
+WHERE status IN ('Available','Near Expiry')
+```
+
+If we wrote:
+
+``` python
+status="Available"
+```
+
+Near Expiry blood would never be selected.
+
+------------------------------------------------------------------------
+
+# FIFO
+
+``` python
+.order_by("collection_date")
+```
+
+Oldest blood appears first.
+
+Example
+
+``` text
+INV001   2026-06-01
+INV004   2026-06-03
+INV009   2026-06-08
+```
+
+Allocation always starts from the oldest blood bag.
+
+------------------------------------------------------------------------
+
+# Determine Quantity
+
+``` python
+requested_quantity = request.quantity
+
+available_quantity = available_blood.count()
+
+allocated_quantity = min(
+    requested_quantity,
+    available_quantity
+)
+```
+
+Examples
+
+Request = 5 bags
+
+Available = 7 bags
+
+Allocated = 5
+
+------------------------------------------------------------------------
+
+Request = 5 bags
+
+Available = 3 bags
+
+Allocated = 3
+
+Request becomes **Partial**.
+
+------------------------------------------------------------------------
+
+# Selecting Blood Bags
+
+``` python
+selected_blood = available_blood[:allocated_quantity]
+```
+
+Django QuerySets support slicing.
+
+Example
+
+``` python
+available_blood[:3]
+```
+
+returns only the first three compatible blood bags.
+
+------------------------------------------------------------------------
+
+# Create Allocation
+
+``` python
+allocation = Allocation.objects.create(
+
+    allocation_ID=generate_next_ID(
+        Allocation,
+        "allocation_ID",
+        "AL"
+    ),
+
+    allocated_quantity=allocated_quantity,
+
+    allocation_date=date.today(),
+
+    allocation_status="Allocated"
+)
+```
+
+------------------------------------------------------------------------
+
+# Payment Trigger
+
+Before changing inventory status:
+
+``` python
+create_payment(
+    allocation,
+    selected_blood
+)
+```
+
+Payment is checked before inventory becomes `Allocated`, allowing Near
+Expiry blood to be detected correctly.
+
+------------------------------------------------------------------------
+
+# Update Inventory
+
+``` python
+for inventory in selected_blood:
+
+    inventory.status = "Allocated"
+
+    inventory.request = request
+
+    inventory.allocation = allocation
+
+    inventory.save(
+        update_fields=[
+            "status",
+            "request",
+            "allocation"
+        ]
+    )
+```
+
+Each blood bag now knows:
+
+-   Which request it satisfies.
+-   Which allocation it belongs to.
+
+------------------------------------------------------------------------
+
+# Update Request
+
+``` python
+if allocated_quantity == requested_quantity:
+
+    request.status = "Fulfilled"
+
+else:
+
+    request.status = "Partial"
+
+request.save(
+    update_fields=["status"]
+)
+```
+
+------------------------------------------------------------------------
+
+# Why Business Logic?
+
+If this code lived inside Views:
+
+-   Difficult to reuse
+-   Hard to test
+-   Very large Views
+
+Keeping it inside `business_logic.py` allows multiple APIs to reuse the
+same allocation algorithm.
+
+------------------------------------------------------------------------
+
+# Common Mistakes
+
+-   Ignoring FIFO.
+-   Allocating expired blood.
+-   Forgetting to update inventory.
+-   Forgetting to update request status.
+-   Creating payment after inventory status has already changed.
+
+------------------------------------------------------------------------
+
+# Best Practices
+
+-   Keep allocation inside business logic.
+-   Use ORM filtering instead of Python loops.
+-   Save only modified fields with `update_fields`.
+-   Reuse allocation logic from Views.
+
+------------------------------------------------------------------------
+
+# Chapter Summary
+
+You learned:
+
+-   FIFO allocation
+-   Compatible blood selection
+-   QuerySet filtering
+-   `status__in`
+-   `order_by`
+-   `count`
+-   QuerySet slicing
+-   Partial allocation
+-   Request updates
+-   Inventory updates
+-   Automatic payment trigger
+
+
 # 📈 Current Progress
 
 | Chapter | Status |
