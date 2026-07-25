@@ -142,7 +142,8 @@ CREATE TABLE Blood_Inventory (
     collection_date DATE NOT NULL,
 
     status VARCHAR(15) NOT NULL DEFAULT 'Available'
-        CHECK (status IN ('Available', 'Unavailable')),
+        CHECK (status IN
+        ('Available', 'Near Expiry', 'Expired', 'Allocated')),
 
     branch_ID VARCHAR(20) NOT NULL,
 
