@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import UserListAPIView, UserDetailAPIView
-from .views import ReportListAPIView, ReportRetrieveUpdateDestroyAPIView
+from .views import GenerateReportAPIView, ReportListAPIView, ReportRetrieveUpdateDestroyAPIView
 from .views import NationwideReportAPIView
 from .views import UserPhoneAPIView, UserPhoneDetailAPIView
 urlpatterns = [
@@ -17,6 +17,12 @@ urlpatterns = [
     "reports/",
     ReportListAPIView.as_view(),
     name="report-list"
+    ),
+
+    path(
+        "generate/",
+        GenerateReportAPIView.as_view(),
+        name="generate-report"
     ),
     
     path(

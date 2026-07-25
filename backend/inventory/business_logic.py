@@ -1,11 +1,16 @@
 from datetime import date
+
 from requests.models import Request
+
 from .models import BloodInventory, Allocation
+
 from utils.id_generator import generate_next_ID
+
 from payment.business_logic import create_payment
 
+
 def update_inventory_status(inventory):
-     """
+    """
     Updates the inventory status based on collection_date.
 
     Rules:
@@ -14,28 +19,38 @@ def update_inventory_status(inventory):
     - 35-41 days -> Near Expiry
     - 42+ days   -> Expired
     """
-     
-     if inventory.status == "Allocated":
-          return
-     
-     days_stored = (date.today() - inventory.collection_date).days
 
+    if inventory.status == "Allocated":
+        return
 
-     if days_stored >= 42:
-          new_status = "Expired"
+    days_stored = (
+        date.today() - inventory.collection_date
+    ).days
 
-     elif days_stored >= 35:
-          new_status = "Near Expiry"
+    if days_stored >= 42:
+        new_status = "Expired"
 
-     else:
-          new_status = "Available"
+    elif days_stored >= 35:
+        new_status = "Near Expiry"
 
+    else:
+        new_status = "Available"
 
+    if inventory.status != new_status:
 
-     if inventory.status != new_status:
-          inventory.status = new_status
-          inventory.save(update_fields=["status"])
+        inventory.status = new_status
 
+        try:
+
+            inventory.save(
+                update_fields=["status"]
+            )
+
+        except Exception:
+
+            raise ValueError(
+                f"Failed to update inventory status for {inventory.inventory_ID}."
+            )
 
 
 def create_allocation(request_ID):
@@ -43,90 +58,137 @@ def create_allocation(request_ID):
     Processes a blood request and creates an allocation.
     """
 
-    request = Request.objects.get(
-         request_ID=request_ID
-    )
+    try:
+
+        request = Request.objects.get(
+            request_ID=request_ID
+        )
+
+    except Request.DoesNotExist:
+
+        raise ValueError(
+            "Request not found."
+        )
 
     if request.status == "Rejected":
-         raise ValueError(
-              "This request has been rejected."
-         )
-    
+
+        raise ValueError(
+            "This request has been rejected."
+        )
+
     if request.status == "Fulfilled":
-         raise ValueError(
-              "This request has already been fulfilled."
-         )
-    
+
+        raise ValueError(
+            "This request has already been fulfilled."
+        )
+
     inventories = BloodInventory.objects.all()
 
     for inventory in inventories:
-         update_inventory_status(inventory)
-
+        update_inventory_status(
+            inventory
+        )
 
     available_blood = BloodInventory.objects.filter(
-         blood_group=request.blood_group,
-         status__in=["Available", "Near Expiry"]
-    ).order_by("collection_date")
-
+        blood_group=request.blood_group,
+        status__in=[
+            "Available",
+            "Near Expiry"
+        ]
+    ).order_by(
+        "collection_date"
+    )
 
     requested_quantity = request.quantity
 
     available_quantity = available_blood.count()
 
-
     if available_quantity == 0:
-         raise ValueError(
-              "No compatible blood bags available."
-          )
-    
+
+        raise ValueError(
+            "No compatible blood bags available."
+        )
+
     allocated_quantity = min(
-         requested_quantity,
-         available_quantity
+        requested_quantity,
+        available_quantity
     )
 
-    selected_blood = available_blood[:allocated_quantity]
+    selected_blood = available_blood[
+        :allocated_quantity
+    ]
 
-    allocation = Allocation.objects.create(
+    try:
 
-    allocation_ID=generate_next_ID(
-        Allocation,
-        "allocation_ID",
-        "AL"
-    ),
+        allocation = Allocation.objects.create(
 
-    allocated_quantity=allocated_quantity,
+            allocation_ID=generate_next_ID(
+                Allocation,
+                "allocation_ID",
+                "AL"
+            ),
 
-    allocation_date=date.today(),
+            allocated_quantity=allocated_quantity,
 
-    allocation_status="Allocated"
-)
-    
+            allocation_date=date.today(),
+
+            allocation_status="Allocated"
+
+        )
+
+    except Exception:
+
+        raise ValueError(
+            "Failed to create allocation."
+        )
+
     create_payment(
-         allocation,
-         selected_blood
+        allocation,
+        selected_blood
     )
 
     for inventory in selected_blood:
-         
-         inventory.status = "Allocated"
 
-         inventory.request = request
+        inventory.status = "Allocated"
 
-         inventory.allocation = allocation
+        inventory.request = request
 
-         inventory.save(
-              update_fields=[
-                   "status",
-                   "request",
-                   "allocation"
-                   ]
-          )
-         
-         if allocated_quantity == requested_quantity:
-              request.status = "Fulfilled"
+        inventory.allocation = allocation
 
-         else:
-              request.status = "Partial"
-              request.save(
-                   update_fields=["status"]
-                   )
+        try:
+
+            inventory.save(
+                update_fields=[
+                    "status",
+                    "request",
+                    "allocation"
+                ]
+            )
+
+        except Exception:
+
+            raise ValueError(
+                f"Failed to update inventory {inventory.inventory_ID}."
+            )
+
+    if allocated_quantity == requested_quantity:
+
+        request.status = "Fulfilled"
+
+    else:
+
+        request.status = "Partial"
+
+    try:
+
+        request.save(
+            update_fields=[
+                "status"
+            ]
+        )
+
+    except Exception:
+
+        raise ValueError(
+            "Failed to update request."
+        )

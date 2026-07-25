@@ -1,12 +1,17 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status, generics
 
 from .models import User, Report, UserPhone
 from .serializers import UserSerializer, ReportSerializer, UserPhoneSerializer
+from .business_logic import generate_report
 
-from rest_framework import status, generics
-from .permissions import CanGenerateReports, CanViewNationwideReports, CanManageStaff
+from .permissions import (
+    CanGenerateReports,
+    CanViewNationwideReports,
+    CanManageStaff,
+)
 
 class UserListAPIView(APIView):
 
@@ -124,7 +129,7 @@ class UserDetailAPIView(APIView):
     
 
 class ReportListAPIView(
-    generics.ListCreateAPIView
+    generics.ListAPIView
 ):
 
     permission_classes = [
@@ -134,6 +139,49 @@ class ReportListAPIView(
     queryset = Report.objects.all()
 
     serializer_class = ReportSerializer
+
+
+class GenerateReportAPIView(APIView):
+
+    permission_classes = [
+        CanGenerateReports
+    ]
+
+    def post(self, request):
+
+        try:
+
+            report = generate_report(
+                request.user
+            )
+
+            serializer = ReportSerializer(
+                report
+            )
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        except ValueError as e:
+
+            return Response(
+                {
+                    "error": str(e)
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        except Exception:
+
+            return Response(
+                {
+                    "error": "An unexpected error occurred while generating the report."
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 
 class ReportRetrieveUpdateDestroyAPIView(
@@ -153,15 +201,17 @@ class ReportRetrieveUpdateDestroyAPIView(
     lookup_url_kwarg = "report_ID"
 
 
-class NationwideReportAPIView(generics.ListAPIView):
+class NationwideReportAPIView(
+    generics.ListAPIView
+):
 
     permission_classes = [
         CanViewNationwideReports
     ]
 
-    serializer_class = ReportSerializer
-
     queryset = Report.objects.all()
+
+    serializer_class = ReportSerializer
 
 
 
