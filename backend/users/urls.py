@@ -26,15 +26,15 @@ urlpatterns = [
     ),
     
     path(
-    "reports/<str:report_ID>/",
-    ReportRetrieveUpdateDestroyAPIView.as_view(),
-    name="report-detail"
-    ),
-
-    path(
     "reports/nationwide/",
     NationwideReportAPIView.as_view(),
     name="nationwide-report"
+    ),
+
+    path(
+    "reports/<str:report_ID>/",
+    ReportRetrieveUpdateDestroyAPIView.as_view(),
+    name="report-detail"
     ),
 
     path(

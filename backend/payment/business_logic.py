@@ -15,22 +15,21 @@ def create_payment(
     is Near Expiry.
     """
 
-    payment_required = False
+    near_expiry_count = 0
 
     for inventory in selected_blood:
 
         if inventory.status == "Near Expiry":
 
-            payment_required = True
-            break
+            near_expiry_count += 1
 
 
-    if not payment_required:
+    if near_expiry_count == 0:
         return None
 
 
     payment_amount = (
-        allocation.allocated_quantity
+        near_expiry_count
         * PRICE_PER_BAG
     )
 

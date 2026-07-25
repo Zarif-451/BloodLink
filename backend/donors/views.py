@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.db import IntegrityError
 
 from .models import Donor, DonorPhone
 from .serializers import DonorSerializer, DonorPhoneSerializer
@@ -121,7 +122,18 @@ class DonorDetailAPIView(APIView):
             national_ID=national_ID
         )
 
-        donor.delete()
+        try:
+
+            donor.delete()
+
+        except IntegrityError:
+
+            return Response(
+                {
+                    "error": "Cannot delete. This donor has related records."
+                },
+                status=status.HTTP_409_CONFLICT
+            )
 
         return Response(
             status=status.HTTP_204_NO_CONTENT
@@ -145,7 +157,7 @@ class DonorPhoneAPIView(APIView):
             donor=donor
         )
 
-        serializr = DonorSerializer(
+        serializr = DonorPhoneSerializer(
             phones,
             many=True
         )
@@ -188,7 +200,7 @@ class DonorPhoneDetailAPIView(APIView):
         CanManageDonors
     ]
 
-    def get_object(self, request, national_ID, phone):
+    def get_object(self, national_ID, phone):
 
         return get_object_or_404(
             DonorPhone,

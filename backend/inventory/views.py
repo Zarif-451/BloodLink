@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.db import IntegrityError
 
 from .models import BloodInventory, Allocation
 from .serializers import BloodInventorySerializer, AllocationSerializer
@@ -140,7 +141,18 @@ class BloodInventoryDetailAPIView(APIView):
             inventory_ID=inventory_ID
         )
 
-        inventory.delete()
+        try:
+
+            inventory.delete()
+
+        except IntegrityError:
+
+            return Response(
+                {
+                    "error": "Cannot delete. This blood unit has related records."
+                },
+                status=status.HTTP_409_CONFLICT
+            )
 
         return Response(
             status=status.HTTP_204_NO_CONTENT

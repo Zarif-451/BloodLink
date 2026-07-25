@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.db import IntegrityError
 
 from .models import Requester
 from .serializers import RequesterSerializer
@@ -129,7 +130,18 @@ class RequesterDetailAPIView(APIView):
             requester_ID=requester_ID
         )
 
-        requester.delete()
+        try:
+
+            requester.delete()
+
+        except IntegrityError:
+
+            return Response(
+                {
+                    "error": "Cannot delete. This requester has related records."
+                },
+                status=status.HTTP_409_CONFLICT
+            )
 
         return Response(
             status=status.HTTP_204_NO_CONTENT
@@ -137,6 +149,17 @@ class RequesterDetailAPIView(APIView):
     
 
 class RequestListAPIView(APIView):
+
+    permission_classes = [
+        CanManageBloodRequests
+    ]
+
+    def get_permissions(self):
+
+        if self.request.method == "POST":
+            return []
+
+        return super().get_permissions()
 
     def get(self, request):
 
@@ -173,6 +196,10 @@ class RequestListAPIView(APIView):
 
 
 class RequestDetailAPIView(APIView):
+
+    permission_classes = [
+        CanManageBloodRequests
+    ]
 
     def get(self, request, request_ID):
 
@@ -248,7 +275,18 @@ class RequestDetailAPIView(APIView):
             request_ID=request_ID
         )
 
-        blood_request.delete()
+        try:
+
+            blood_request.delete()
+
+        except IntegrityError:
+
+            return Response(
+                {
+                    "error": "Cannot delete. This request has related records."
+                },
+                status=status.HTTP_409_CONFLICT
+            )
 
         return Response(
             status=status.HTTP_204_NO_CONTENT

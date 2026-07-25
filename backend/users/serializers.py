@@ -9,8 +9,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = "__all__"
-        read_only_fields = [
-            "user_ID"
+read_only_fields = [
+            "user"
         ]
 
         extra_kwargs = {
@@ -63,5 +63,5 @@ class UserPhoneSerializer(serializers.ModelSerializer):
         model = UserPhone
         fields = "__all__"
         read_only_fields = [
-            "user_ID"
+            "user"
         ]

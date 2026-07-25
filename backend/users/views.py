@@ -15,6 +15,10 @@ from .permissions import (
 
 class UserListAPIView(APIView):
 
+    permission_classes = [
+        CanManageStaff
+    ]
+
     def get(self, request):
 
         users = User.objects.all()
@@ -47,6 +51,10 @@ class UserListAPIView(APIView):
         )
 
 class UserDetailAPIView(APIView):
+
+    permission_classes = [
+        CanManageStaff
+    ]
 
     def get(self, request, user_ID):
 

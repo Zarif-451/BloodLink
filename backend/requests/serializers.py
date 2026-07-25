@@ -34,10 +34,10 @@ class RequestSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
 
         validated_data["request_ID"] = generate_next_ID(
-            Requester, "requester_ID", "REQ"
+            Request, "request_ID", "REQ"
         )
 
-        return Requester.objects.create(
+        return Request.objects.create(
             **validated_data
         )
 

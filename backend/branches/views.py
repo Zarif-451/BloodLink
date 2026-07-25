@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.db import IntegrityError
 from .models import Branch, BranchPhone
 from .serializers import BranchSerializer, BranchPhoneSerializer
 from users.permissions import CanManageBranches
@@ -122,7 +123,18 @@ class BranchDetailAPIView(APIView):
             branch_ID=branch_ID
         )
 
-        branch.delete()
+        try:
+
+            branch.delete()
+
+        except IntegrityError:
+
+            return Response(
+                {
+                    "error": "Cannot delete. This branch has related records."
+                },
+                status=status.HTTP_409_CONFLICT
+            )
 
         return Response(
             status=status.HTTP_204_NO_CONTENT

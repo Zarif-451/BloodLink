@@ -62,6 +62,15 @@ class LoginAPIView(APIView):
                 },
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+        if user.status != "Active":
+
+            return Response(
+                {
+                    "error": "Account is not active."
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
         
         access_token = generate_access_token(user)
 
@@ -76,6 +85,7 @@ class LoginAPIView(APIView):
 class ProfileAPIView(APIView):
 
     authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
 

@@ -41,14 +41,4 @@ class AllocationSerializer(serializers.ModelSerializer):
             "allocation_date",
             "allocation_status",
         ]
-    
-    def create(self, validated_data):
-
-        validated_data["allocation_ID"] = generate_next_ID(
-            Allocation, "allocation_ID", "AL"
-        )
-
-        return Allocation.objects.create(
-            **validated_data
-        )
         
