@@ -1,107 +1,110 @@
 from django.db import transaction
-
-from rest_framework import generics
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.http import Http404
 
 from inventory.models import Allocation
-
 from .models import Transport
 from .serializers import TransportSerializer
 from .business_logic import assign_transport_to_allocations
-
 from users.permissions import CanManageTransport
+from utils.db import fetch_all, fetch_one, execute
 
 
-class TransportListAPIView(
-    generics.ListCreateAPIView
-):
-
-    permission_classes = [
-        CanManageTransport
-    ]
-
-    queryset = Transport.objects.all()
-
-    serializer_class = TransportSerializer
+TRN_COLS = "transport_ID, destination_type, destination_name, transport_date, status, branch_ID"
 
 
-    def create(
-        self,
-        request,
-        *args,
-        **kwargs
-    ):
+class TransportListAPIView(APIView):
 
-        allocation_IDs = request.data.get(
-            "allocation_IDs",
-            []
-        )
+    permission_classes = [CanManageTransport]
+
+    def get(self, request):
+        rows = fetch_all(f"SELECT {TRN_COLS} FROM Transports")
+        transports = [Transport(**row) for row in rows]
+        serializer = TransportSerializer(transports, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        allocation_IDs = request.data.get("allocation_IDs", [])
 
         transport_data = request.data.copy()
+        transport_data.pop("allocation_IDs", None)
 
-        transport_data.pop(
-            "allocation_IDs",
-            None
-        )
-
-        serializer = self.get_serializer(
-            data=transport_data
-        )
-
-        serializer.is_valid(
-            raise_exception=True
-        )
+        serializer = TransportSerializer(data=transport_data)
+        serializer.is_valid(raise_exception=True)
 
         try:
-
             with transaction.atomic():
-
-                transport = serializer.save()
-
-                assign_transport_to_allocations(
-                    transport,
-                    allocation_IDs
-                )
+                transport_instance = serializer.save()
+                transport_row = {
+                    "transport_ID": transport_instance.transport_ID,
+                    "destination_type": transport_instance.destination_type,
+                    "destination_name": transport_instance.destination_name,
+                    "transport_date": transport_instance.transport_date,
+                    "status": transport_instance.status,
+                    "branch_ID": transport_instance.branch_id,
+                }
+                assign_transport_to_allocations(transport_row, allocation_IDs)
 
             return Response(
-                TransportSerializer(
-                    transport
-                ).data,
+                TransportSerializer(transport_instance).data,
                 status=status.HTTP_201_CREATED
             )
 
-        except Allocation.DoesNotExist:
-
-            return Response(
-                {
-                    "error": "Allocation not found."
-                },
-                status=status.HTTP_404_NOT_FOUND
-            )
-
         except ValueError as e:
-
             return Response(
-                {
-                    "error": str(e)
-                },
+                {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
 
-class TransportRetrieveUpdateDestroyAPIView(
-    generics.RetrieveUpdateDestroyAPIView
-):
+class TransportRetrieveUpdateDestroyAPIView(APIView):
 
-    permission_classes = [
-        CanManageTransport
-    ]
+    permission_classes = [CanManageTransport]
 
-    queryset = Transport.objects.all()
+    def _get(self, transport_ID):
+        row = fetch_one(
+            f"SELECT {TRN_COLS} FROM Transports WHERE transport_ID = %s",
+            [transport_ID]
+        )
+        if row is None:
+            raise Http404("No Transport matches the given query.")
+        return row
 
-    serializer_class = TransportSerializer
+    def get(self, request, transport_ID):
+        row = self._get(transport_ID)
+        transport = Transport(**row)
+        serializer = TransportSerializer(transport)
+        return Response(serializer.data)
 
-    lookup_field = "transport_ID"
+    def put(self, request, transport_ID):
+        row = self._get(transport_ID)
+        transport = Transport(**row)
+        serializer = TransportSerializer(instance=transport, data=request.data)
+        if serializer.is_valid():
+            instance = serializer.save()
+            return Response(
+                TransportSerializer(instance).data,
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    lookup_url_kwarg = "transport_ID"
+    def patch(self, request, transport_ID):
+        row = self._get(transport_ID)
+        transport = Transport(**row)
+        serializer = TransportSerializer(
+            instance=transport, data=request.data, partial=True
+        )
+        if serializer.is_valid():
+            instance = serializer.save()
+            return Response(
+                TransportSerializer(instance).data,
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, transport_ID):
+        self._get(transport_ID)
+        execute("DELETE FROM Transports WHERE transport_ID = %s", [transport_ID])
+        return Response(status=status.HTTP_204_NO_CONTENT)

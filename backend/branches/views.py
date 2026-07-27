@@ -1,4 +1,3 @@
-from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,6 +6,12 @@ from .models import Branch, BranchPhone
 from .serializers import BranchSerializer, BranchPhoneSerializer
 from users.permissions import CanManageBranches
 
+from utils.db import fetch_all, fetch_one, execute, model_from_row
+
+
+BR_COLS = "branch_ID, branch_name, district, street, area, city, branch_status, user_ID"
+
+
 class BranchListAPIView(APIView):
 
     permission_classes = [
@@ -14,131 +19,95 @@ class BranchListAPIView(APIView):
     ]
 
     def get(self, request):
-
-        branches = Branch.objects.all()
-
-        serializer = BranchSerializer(
-            branches,
-            many=True
-        )
-
+        rows = fetch_all("SELECT %s FROM Branches" % BR_COLS)
+        branches = [model_from_row(Branch, row) for row in rows]
+        serializer = BranchSerializer(branches, many=True)
         return Response(serializer.data)
-    
 
     def post(self, request):
-
-        serializer = BranchSerializer(
-            data=request.data
-        )
-
+        serializer = BranchSerializer(data=request.data)
         if serializer.is_valid():
-
-            serializer.save()
-
+            instance = serializer.save()
             return Response(
-                serializer.data,
+                BranchSerializer(instance).data,
                 status=status.HTTP_201_CREATED
             )
-        
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
 
 class BranchDetailAPIView(APIView):
 
     permission_classes = [
         CanManageBranches
     ]
-    
+
     def get(self, request, branch_ID):
-
-        branch = get_object_or_404(
-            Branch,
-            branch_ID=branch_ID
+        row = fetch_one(
+            "SELECT %s FROM Branches WHERE branch_ID = %%s" % BR_COLS,
+            [branch_ID]
         )
-
+        if row is None:
+            from django.http import Http404
+            raise Http404("No Branch matches the given query.")
+        branch = model_from_row(Branch, row)
         serializer = BranchSerializer(branch)
-        
         return Response(serializer.data)
-    
+
     def put(self, request, branch_ID):
-
-        branch = get_object_or_404(
-            Branch,
-            branch_ID=branch_ID
+        row = fetch_one(
+            "SELECT %s FROM Branches WHERE branch_ID = %%s" % BR_COLS,
+            [branch_ID]
         )
-
-        serializer = BranchSerializer(
-            instance=branch,
-            data=request.data
-        )
-
+        if row is None:
+            from django.http import Http404
+            raise Http404("No Branch matches the given query.")
+        branch = model_from_row(Branch, row)
+        serializer = BranchSerializer(instance=branch, data=request.data)
         if serializer.is_valid():
-
-            serializer.save()
-
+            instance = serializer.save()
             return Response(
-                serializer.data,
+                BranchSerializer(instance).data,
                 status=status.HTTP_200_OK
             )
-        
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def patch(self, request, branch_ID):
-
-        branch = get_object_or_404(
-            Branch,
-            branch_ID=branch_ID
+        row = fetch_one(
+            "SELECT %s FROM Branches WHERE branch_ID = %%s" % BR_COLS,
+            [branch_ID]
         )
-
-        serializer = BranchSerializer(
-            instance=branch,
-            data=request.data,
-            partial=True
-        )
-
+        if row is None:
+            from django.http import Http404
+            raise Http404("No Branch matches the given query.")
+        branch = model_from_row(Branch, row)
+        serializer = BranchSerializer(instance=branch, data=request.data, partial=True)
         if serializer.is_valid():
-
-            serializer.save()
-
+            instance = serializer.save()
             return Response(
-                serializer.data,
+                BranchSerializer(instance).data,
                 status=status.HTTP_200_OK
             )
-        
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def delete(self, request, branch_ID):
-
-        branch = get_object_or_404(
-            Branch,
-            branch_ID=branch_ID
+        row = fetch_one(
+            "SELECT branch_ID FROM Branches WHERE branch_ID = %s",
+            [branch_ID]
         )
-
+        if row is None:
+            from django.http import Http404
+            raise Http404("No Branch matches the given query.")
         try:
-
-            branch.delete()
-
+            execute("DELETE FROM Branches WHERE branch_ID = %s", [branch_ID])
         except IntegrityError:
-
             return Response(
-                {
-                    "error": "Cannot delete. This branch has related records."
-                },
+                {"error": "Cannot delete. This branch has related records."},
                 status=status.HTTP_409_CONFLICT
             )
-
-        return Response(
-            status=status.HTTP_204_NO_CONTENT
-        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class BranchPhoneListAPIView(APIView):
@@ -147,63 +116,46 @@ class BranchPhoneListAPIView(APIView):
         CanManageBranches
     ]
 
-
-    def get(
-        self,
-        request,
-        branch_ID
-    ):
-
-        branch = get_object_or_404(
-            Branch,
-            branch_ID=branch_ID
+    def get(self, request, branch_ID):
+        row = fetch_one(
+            "SELECT branch_ID FROM Branches WHERE branch_ID = %s",
+            [branch_ID]
         )
+        if row is None:
+            from django.http import Http404
+            raise Http404("No Branch matches the given query.")
 
-        phones = BranchPhone.objects.filter(
-            branch=branch
+        rows = fetch_all(
+            "SELECT branch_ID, phone FROM Branch_phone WHERE branch_ID = %s",
+            [branch_ID]
         )
-
-        serializer = BranchPhoneSerializer(
-            phones,
-            many=True
-        )
-
+        phones = [model_from_row(BranchPhone, row) for row in rows]
+        serializer = BranchPhoneSerializer(phones, many=True)
         return Response(serializer.data)
 
-
-    def post(
-        self,
-        request,
-        branch_ID
-    ):
-
-        branch = get_object_or_404(
-            Branch,
-            branch_ID=branch_ID
+    def post(self, request, branch_ID):
+        row = fetch_one(
+            "SELECT branch_ID FROM Branches WHERE branch_ID = %s",
+            [branch_ID]
         )
+        if row is None:
+            from django.http import Http404
+            raise Http404("No Branch matches the given query.")
 
         data = request.data.copy()
-
-        data["branch"] = branch.branch_ID
-
-        serializer = BranchPhoneSerializer(
-            data=data
-        )
-
+        data["branch"] = branch_ID
+        serializer = BranchPhoneSerializer(data=data)
         if serializer.is_valid():
-
-            serializer.save()
-
+            instance = serializer.save()
             return Response(
-                serializer.data,
+                BranchPhoneSerializer(instance).data,
                 status=status.HTTP_201_CREATED
             )
-
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
 
 class BranchPhoneDetailAPIView(APIView):
 
@@ -211,56 +163,28 @@ class BranchPhoneDetailAPIView(APIView):
         CanManageBranches
     ]
 
-
-    def get_object(
-        self,
-        branch_ID,
-        phone
-    ):
-
-        return get_object_or_404(
-
-            BranchPhone,
-
-            branch__branch_ID=branch_ID,
-
-            phone=phone
+    def get(self, request, branch_ID, phone):
+        row = fetch_one(
+            "SELECT branch_ID, phone FROM Branch_phone WHERE branch_ID = %s AND phone = %s",
+            [branch_ID, phone]
         )
-
-
-    def get(
-        self,
-        request,
-        branch_ID,
-        phone
-    ):
-
-        branch_phone = self.get_object(
-            branch_ID,
-            phone
-        )
-
-        serializer = BranchPhoneSerializer(
-            branch_phone
-        )
-
+        if row is None:
+            from django.http import Http404
+            raise Http404("No BranchPhone matches the given query.")
+        branch_phone = model_from_row(BranchPhone, row)
+        serializer = BranchPhoneSerializer(branch_phone)
         return Response(serializer.data)
 
-
-    def delete(
-        self,
-        request,
-        branch_ID,
-        phone
-    ):
-
-        branch_phone = self.get_object(
-            branch_ID,
-            phone
+    def delete(self, request, branch_ID, phone):
+        row = fetch_one(
+            "SELECT branch_ID, phone FROM Branch_phone WHERE branch_ID = %s AND phone = %s",
+            [branch_ID, phone]
         )
-
-        branch_phone.delete()
-
-        return Response(
-            status=status.HTTP_204_NO_CONTENT
+        if row is None:
+            from django.http import Http404
+            raise Http404("No BranchPhone matches the given query.")
+        execute(
+            "DELETE FROM Branch_phone WHERE branch_ID = %s AND phone = %s",
+            [branch_ID, phone]
         )
+        return Response(status=status.HTTP_204_NO_CONTENT)
