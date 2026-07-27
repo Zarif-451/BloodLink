@@ -1,30 +1,15 @@
-from django.db.models import Max
+from utils.db import fetch_one
 
-def generate_next_ID (
-        model,
-        id_field,
-        prefix
-):
-    result = model.objects.aggregate(
-        Max(id_field)
+
+def generate_next_ID(table_name, id_column, prefix):
+    row = fetch_one(
+        "SELECT MAX(%s) AS max_id FROM %s" % (id_column, table_name)
     )
-
-    
-    largest_ID = result[
-        id_field + "__max"
-    ]
+    largest_ID = row["max_id"]
 
     if largest_ID is None:
-
         return prefix + "0001"
-    
 
-    number = largest_ID[len(prefix):]
-
-    number = int(number)
-
-    number = number + 1
-    number = f"{number:04d}"
-
-    return prefix + number
-
+    number = int(largest_ID[len(prefix):])
+    number += 1
+    return prefix + "%04d" % number

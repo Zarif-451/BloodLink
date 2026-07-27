@@ -1,7 +1,6 @@
-from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, generics
+from rest_framework import status
 
 from .models import User, Report, UserPhone
 from .serializers import UserSerializer, ReportSerializer, UserPhoneSerializer
@@ -13,6 +12,9 @@ from .permissions import (
     CanManageStaff,
 )
 
+from utils.db import fetch_all, fetch_one, execute, model_from_row
+
+
 class UserListAPIView(APIView):
 
     permission_classes = [
@@ -21,7 +23,11 @@ class UserListAPIView(APIView):
 
     def get(self, request):
 
-        users = User.objects.all()
+        rows = fetch_all(
+            "SELECT user_ID, full_name, email, password, role, status FROM Users"
+        )
+
+        users = [model_from_row(User, row) for row in rows]
 
         serializer = UserSerializer(
             users,
@@ -29,7 +35,7 @@ class UserListAPIView(APIView):
         )
 
         return Response(serializer.data)
-    
+
     def post(self, request):
 
         serializer = UserSerializer(
@@ -38,17 +44,18 @@ class UserListAPIView(APIView):
 
         if serializer.is_valid():
 
-            serializer.save()
+            instance = serializer.save()
 
             return Response(
-                serializer.data,
+                UserSerializer(instance).data,
                 status=status.HTTP_201_CREATED
             )
-        
+
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
+
 
 class UserDetailAPIView(APIView):
 
@@ -58,22 +65,33 @@ class UserDetailAPIView(APIView):
 
     def get(self, request, user_ID):
 
-        user = get_object_or_404(
-            User,
-            user_ID=user_ID
+        row = fetch_one(
+            "SELECT user_ID, full_name, email, password, role, status FROM Users WHERE user_ID = %s",
+            [user_ID]
         )
-        
+
+        if row is None:
+            from django.http import Http404
+            raise Http404("No User matches the given query.")
+
+        user = model_from_row(User, row)
+
         serializer = UserSerializer(user)
-        
+
         return Response(serializer.data)
-    
 
     def put(self, request, user_ID):
 
-        user = get_object_or_404(
-            User,
-            user_ID=user_ID
+        row = fetch_one(
+            "SELECT user_ID, full_name, email, password, role, status FROM Users WHERE user_ID = %s",
+            [user_ID]
         )
+
+        if row is None:
+            from django.http import Http404
+            raise Http404("No User matches the given query.")
+
+        user = model_from_row(User, row)
 
         serializer = UserSerializer(
             instance=user,
@@ -82,25 +100,30 @@ class UserDetailAPIView(APIView):
 
         if serializer.is_valid():
 
-            serializer.save()
+            instance = serializer.save()
 
             return Response(
-                serializer.data,
+                UserSerializer(instance).data,
                 status=status.HTTP_200_OK
             )
-        
+
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-    
 
     def patch(self, request, user_ID):
 
-        user = get_object_or_404(
-            User,
-            user_ID=user_ID
+        row = fetch_one(
+            "SELECT user_ID, full_name, email, password, role, status FROM Users WHERE user_ID = %s",
+            [user_ID]
         )
+
+        if row is None:
+            from django.http import Http404
+            raise Http404("No User matches the given query.")
+
+        user = model_from_row(User, row)
 
         serializer = UserSerializer(
             instance=user,
@@ -110,43 +133,63 @@ class UserDetailAPIView(APIView):
 
         if serializer.is_valid():
 
-            serializer.save()
+            instance = serializer.save()
 
             return Response(
-                serializer.data,
+                UserSerializer(instance).data,
                 status=status.HTTP_200_OK
             )
-        
+
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     def delete(self, request, user_ID):
 
-        user = get_object_or_404(
-            User,
-            user_ID=user_ID
+        row = fetch_one(
+            "SELECT user_ID FROM Users WHERE user_ID = %s",
+            [user_ID]
         )
 
-        user.delete()
+        if row is None:
+            from django.http import Http404
+            raise Http404("No User matches the given query.")
+
+        execute(
+            "DELETE FROM Users WHERE user_ID = %s",
+            [user_ID]
+        )
 
         return Response(
             status=status.HTTP_204_NO_CONTENT
         )
-    
 
-class ReportListAPIView(
-    generics.ListAPIView
-):
+
+class ReportListAPIView(APIView):
 
     permission_classes = [
         CanGenerateReports
     ]
 
-    queryset = Report.objects.all()
+    def get(self, request):
+        rows = fetch_all("SELECT report_ID, generated_on, report_data, user_ID FROM Reports")
+        reports = [model_from_row(Report, row) for row in rows]
+        serializer = ReportSerializer(reports, many=True)
+        return Response(serializer.data)
 
-    serializer_class = ReportSerializer
+    def post(self, request):
+        serializer = ReportSerializer(data=request.data)
+        if serializer.is_valid():
+            instance = serializer.save()
+            return Response(
+                ReportSerializer(instance).data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class GenerateReportAPIView(APIView):
@@ -191,36 +234,83 @@ class GenerateReportAPIView(APIView):
             )
 
 
-
-class ReportRetrieveUpdateDestroyAPIView(
-    generics.RetrieveUpdateDestroyAPIView
-):
+class ReportRetrieveUpdateDestroyAPIView(APIView):
 
     permission_classes = [
         CanGenerateReports
     ]
 
-    queryset = Report.objects.all()
+    def get(self, request, report_ID):
+        row = fetch_one(
+            "SELECT report_ID, generated_on, report_data, user_ID FROM Reports WHERE report_ID = %s",
+            [report_ID]
+        )
+        if row is None:
+            from django.http import Http404
+            raise Http404("No Report matches the given query.")
+        report = model_from_row(Report, row)
+        serializer = ReportSerializer(report)
+        return Response(serializer.data)
 
-    serializer_class = ReportSerializer
+    def put(self, request, report_ID):
+        row = fetch_one(
+            "SELECT report_ID, generated_on, report_data, user_ID FROM Reports WHERE report_ID = %s",
+            [report_ID]
+        )
+        if row is None:
+            from django.http import Http404
+            raise Http404("No Report matches the given query.")
+        report = model_from_row(Report, row)
+        serializer = ReportSerializer(instance=report, data=request.data)
+        if serializer.is_valid():
+            instance = serializer.save()
+            return Response(
+                ReportSerializer(instance).data,
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    lookup_field = "report_ID"
+    def patch(self, request, report_ID):
+        row = fetch_one(
+            "SELECT report_ID, generated_on, report_data, user_ID FROM Reports WHERE report_ID = %s",
+            [report_ID]
+        )
+        if row is None:
+            from django.http import Http404
+            raise Http404("No Report matches the given query.")
+        report = model_from_row(Report, row)
+        serializer = ReportSerializer(instance=report, data=request.data, partial=True)
+        if serializer.is_valid():
+            instance = serializer.save()
+            return Response(
+                ReportSerializer(instance).data,
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    lookup_url_kwarg = "report_ID"
+    def delete(self, request, report_ID):
+        row = fetch_one(
+            "SELECT report_ID FROM Reports WHERE report_ID = %s",
+            [report_ID]
+        )
+        if row is None:
+            from django.http import Http404
+            raise Http404("No Report matches the given query.")
+        execute("DELETE FROM Reports WHERE report_ID = %s", [report_ID])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class NationwideReportAPIView(
-    generics.ListAPIView
-):
+class NationwideReportAPIView(APIView):
 
     permission_classes = [
         CanViewNationwideReports
     ]
 
-    queryset = Report.objects.all()
-
-    serializer_class = ReportSerializer
-
+    def get(self, request):
+        rows = fetch_all("SELECT report_ID, generated_on, report_data, user_ID FROM Reports")
+        reports = [model_from_row(Report, row) for row in rows]
+        serializer = ReportSerializer(reports, many=True)
+        return Response(serializer.data)
 
 
 class UserPhoneAPIView(APIView):
@@ -231,14 +321,20 @@ class UserPhoneAPIView(APIView):
 
     def get(self, request, user_ID):
 
-        user = get_object_or_404(
-            User,
-            user_ID=user_ID
+        row = fetch_one(
+            "SELECT user_ID FROM Users WHERE user_ID = %s",
+            [user_ID]
+        )
+        if row is None:
+            from django.http import Http404
+            raise Http404("No User matches the given query.")
+
+        rows = fetch_all(
+            "SELECT user_ID, phone FROM User_phone WHERE user_ID = %s",
+            [user_ID]
         )
 
-        phones = UserPhone.objects.filter(
-            user=user
-        )
+        phones = [model_from_row(UserPhone, row) for row in rows]
 
         serializer = UserPhoneSerializer(
             phones,
@@ -246,17 +342,20 @@ class UserPhoneAPIView(APIView):
         )
 
         return Response(serializer.data)
-    
+
     def post(self, request, user_ID):
 
-        user = get_object_or_404(
-            User,
-            user_ID=user_ID
+        row = fetch_one(
+            "SELECT user_ID FROM Users WHERE user_ID = %s",
+            [user_ID]
         )
+        if row is None:
+            from django.http import Http404
+            raise Http404("No User matches the given query.")
 
         data = request.data.copy()
 
-        data["user"] = user.user_ID
+        data["user"] = user_ID
 
         serializer = UserPhoneSerializer(
             data=data
@@ -264,52 +363,59 @@ class UserPhoneAPIView(APIView):
 
         if serializer.is_valid():
 
-            serializer.save()
+            instance = serializer.save()
 
             return Response(
-                serializer.data,
+                UserPhoneSerializer(instance).data,
                 status=status.HTTP_201_CREATED
             )
-        
+
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
+
 class UserPhoneDetailAPIView(APIView):
 
     permission_classes = [
         CanManageStaff
     ]
 
-    def get_object(self, user_ID, phone):
-
-        return get_object_or_404(
-            UserPhone,
-            user__user_ID=user_ID,
-            phone=phone
-        )
-    
     def get(self, request, user_ID, phone):
 
-        user_phone = self.get_object(
-            user_ID, phone
+        row = fetch_one(
+            "SELECT user_ID, phone FROM User_phone WHERE user_ID = %s AND phone = %s",
+            [user_ID, phone]
         )
+
+        if row is None:
+            from django.http import Http404
+            raise Http404("No UserPhone matches the given query.")
+
+        user_phone = model_from_row(UserPhone, row)
 
         serializer = UserPhoneSerializer(
             user_phone
         )
 
         return Response(serializer.data)
-    
-    
+
     def delete(self, request, user_ID, phone):
 
-        user_phone = self.get_object(
-            user_ID, phone
+        row = fetch_one(
+            "SELECT user_ID, phone FROM User_phone WHERE user_ID = %s AND phone = %s",
+            [user_ID, phone]
         )
 
-        user_phone.delete()
+        if row is None:
+            from django.http import Http404
+            raise Http404("No UserPhone matches the given query.")
+
+        execute(
+            "DELETE FROM User_phone WHERE user_ID = %s AND phone = %s",
+            [user_ID, phone]
+        )
 
         return Response(
             status=status.HTTP_204_NO_CONTENT
